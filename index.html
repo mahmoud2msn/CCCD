@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cost Center Code Manager – Standalone</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>html, body { height: 100%; } body { background: #0a0a0a; }</style>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="text-zinc-100">
+  <div id="root"></div>
+
+<script type="text/babel">
+const { useEffect, useMemo, useState } = React;
+
+const LS_KEY = "cccm_datastore_v1";
+const DEFAULT_DATASTORE = {
+  version: 1,
+  publishedAt: "2025-09-25T05:08:59.269271",
+  levels: {"L1": [{"code": "101", "name": "WWTP Mechanical Treatment: Location (A)"}, {"code": "102", "name": "WWTP Biological Treatment: Location (B)"}, {"code": "103", "name": "WWTP Sludge & Gas Path: Location (C)"}, {"code": "104", "name": "WWTP Tertiary Treatment: Location (D)"}, {"code": "105", "name": "WWTP Potable Water PS: Location (E)"}, {"code": "106", "name": "WWTP Stormwater PS: Location (F)"}, {"code": "107", "name": "WWTP Fire Alarm/Fire Fighting System and Network"}, {"code": "108", "name": "WWTP MV/LV Building"}, {"code": "109", "name": "WWTP Emergency Generators"}, {"code": "110", "name": "WWTP (General Costs)"}, {"code": "111", "name": "WWTP (Consumables ,Food and Other Costs)"}, {"code": "120", "name": "WWCN Pumping Stations"}, {"code": "121", "name": "WWCN Network"}, {"code": "122", "name": "WWCN and PSs (General, Consumables & Other Costs)"}, {"code": "130", "name": "WWTS External and Third party services cost"}, {"code": "150", "name": "WWTS Vehicles"}], "L2": [{"code": "2001", "name": "Tanker Reception Station", "parent": {"L1": "101"}}, {"code": "2002", "name": "Inlet Distribution Chamber", "parent": {"L1": "101"}}, {"code": "2003", "name": "Inlet Flowmeter", "parent": {"L1": "101"}}, {"code": "2004", "name": "Screening Building, Screening Unit and MCC Room", "parent": {"L1": "101"}}, {"code": "2005", "name": "Grit and Grease Chamber", "parent": {"L1": "101"}}, {"code": "2006", "name": "Primary Sedimentation Tank", "parent": {"L1": "101"}}, {"code": "2007", "name": "Primary Sludge Pumping Station", "parent": {"L1": "101"}}, {"code": "2008", "name": "Inlet Biofilter/Odor Control unit", "parent": {"L1": "101"}}, {"code": "2020", "name": "Distribution Chamber to Activated Sludge Tanks", "parent": {"L1": "102"}}, {"code": "2021", "name": "Aeration Tank", "parent": {"L1": "102"}}, {"code": "2022", "name": "Anaerobic Selector / Anoxic Tank", "parent": {"L1": "102"}}, {"code": "2023", "name": "Secondary Sedimentation Tanks", "parent": {"L1": "102"}}, {"code": "2024", "name": "Precipitation Dosing Station", "parent": {"L1": "102"}}, {"code": "2025", "name": "Return Sludge Pump Station (RAS PS)", "parent": {"L1": "102"}}, {"code": "2040", "name": "Supernatant Pumping Station", "parent": {"L1": "103"}}, {"code": "2041", "name": "Anaerobic Digestion/Digester/Recirculation PS/Digester Feed PS/Heat Exchanger/MCC Room", "parent": {"L1": "103"}}, {"code": "2042", "name": "Digested Sludge Storage Tank", "parent": {"L1": "103"}}, {"code": "2043", "name": "Surplus Sludge Pump Station (WAS PS)", "parent": {"L1": "103"}}, {"code": "2044", "name": "Sludge Mixing Tank", "parent": {"L1": "103"}}, {"code": "2045", "name": "Old Sludge Dewatering: Belt Filter Press/Digested Sludge Pumps/Belt Conveyor", "parent": {"L1": "103"}}, {"code": "2046", "name": "Old Dewatering Building: Polymer Dosing Station for Belt Press", "parent": {"L1": "103"}}, {"code": "2047", "name": "Old Dewatering Building: Sludge Thickening/Belt thickener 1 & 2/Polymer dosing station for Belt Thickener 1 & 2/Mixed Sludge Pumps/Thickened Sludge Pumps/Thickened Sludge Storage Tank ", "parent": {"L1": "103"}}, {"code": "2048", "name": "New Sludge Dewatering Building including all Equipment", "parent": {"L1": "103"}}, {"code": "2049", "name": "Gas Room", "parent": {"L1": "103"}}, {"code": "2050", "name": "Gas Compressor/Gas Injection System", "parent": {"L1": "103"}}, {"code": "2051", "name": "Gas Storage Tank/Gas Dewatering Shaft", "parent": {"L1": "103"}}, {"code": "2052", "name": "Gas Booster Station", "parent": {"L1": "103"}}, {"code": "2053", "name": "Boiler Station/Ceramic Filter", "parent": {"L1": "103"}}, {"code": "2054", "name": "Diesel Storage Tank", "parent": {"L1": "103"}}, {"code": "2055", "name": "Gas Flare/Gravel Filter", "parent": {"L1": "103"}}, {"code": "2056", "name": "Outlet Biofilter/ Odor Control unit", "parent": {"L1": "103"}}, {"code": "2070", "name": "Effluent Flowmeter & Valves", "parent": {"L1": "104"}}, {"code": "2071", "name": "Service Water Pump Station incl. Network", "parent": {"L1": "104"}}, {"code": "2072", "name": "Collection Chamber after Secondary Sedimentation", "parent": {"L1": "104"}}, {"code": "2073", "name": "Filtration/Backwash PS/Backwash Blower", "parent": {"L1": "104"}}, {"code": "2074", "name": "Chlorination", "parent": {"L1": "104"}}, {"code": "2075", "name": "Outlet Sampler and Sea Outfall", "parent": {"L1": "104"}}, {"code": "2076", "name": "Dirty Backwash Water Tank", "parent": {"L1": "104"}}, {"code": "2077", "name": "Clearwater Tank/Backwash Water System/Intermediate PS/Tanker Feed PS/Aeration Blowers/Outlet Flowmeter chamber", "parent": {"L1": "104"}}, {"code": "2078", "name": "Irrigation network system/Filtration", "parent": {"L1": "104"}}, {"code": "2090", "name": "Potable Water PS incl. Network", "parent": {"L1": "105"}}, {"code": "2095", "name": "Stormwater PS incl. pressure main", "parent": {"L1": "106"}}, {"code": "2100", "name": "Fire Alarm and Fire Fighting System", "parent": {"L1": "107"}}, {"code": "2105", "name": "MV/LV Building", "parent": {"L1": "108"}}, {"code": "2110", "name": "Emergency Generators", "parent": {"L1": "109"}}, {"code": "2120", "name": "Buildings (Operation Building, Service Building, Workshop, Store, Guardhouses) incl. AC-Service", "parent": {"L1": "110"}}, {"code": "2121", "name": "Fence & Gates", "parent": {"L1": "110"}}, {"code": "2122", "name": "Illumination (inside & outside)", "parent": {"L1": "110"}}, {"code": "2123", "name": "Roads, Footpaths", "parent": {"L1": "110"}}, {"code": "2124", "name": "Process Structures and Tanks-WWTP", "parent": {"L1": "110"}}, {"code": "2130", "name": "Electricity", "parent": {"L1": "111"}}, {"code": "2131", "name": "Potable Water", "parent": {"L1": "111"}}, {"code": "2132", "name": "Chlorine Gas", "parent": {"L1": "111"}}, {"code": "2133", "name": "Ferric Chloride", "parent": {"L1": "111"}}, {"code": "2134", "name": "Polyelectrolyte", "parent": {"L1": "111"}}, {"code": "2135", "name": "Diesel for Over Pumping", "parent": {"L1": "111"}}, {"code": "2136", "name": "Diesel (other consumers)", "parent": {"L1": "111"}}, {"code": "2137", "name": "Etisalat", "parent": {"L1": "111"}}, {"code": "2138", "name": "Consumables Workshop (Paint, Oil, Grease etc.)", "parent": {"L1": "111"}}, {"code": "2139", "name": "General Material Workshop (steel, nuts, bolts, welding consumables, material lathe etc.)", "parent": {"L1": "111"}}, {"code": "2140", "name": "Tools (Workshop, Landscaping etc.)", "parent": {"L1": "111"}}, {"code": "2141", "name": "HSE: (PPE, testing, calibration, Hassantuk)", "parent": {"L1": "111"}}, {"code": "2144", "name": "Admin General and Other cost", "parent": {"L1": "111"}}, {"code": "2145", "name": "Lab Expenses, lab consumables, external labs", "parent": {"L1": "111"}}, {"code": "2146", "name": "Food and refereshment", "parent": {"L1": "111"}}, {"code": "2150", "name": "Utilities", "parent": {"L1": "111"}}, {"code": "2200", "name": "PS 01", "parent": {"L1": "120"}}, {"code": "2201", "name": "PS 02", "parent": {"L1": "120"}}, {"code": "2202", "name": "PS 03", "parent": {"L1": "120"}}, {"code": "2203", "name": "PS 04", "parent": {"L1": "120"}}, {"code": "2204", "name": "PS 05", "parent": {"L1": "120"}}, {"code": "2205", "name": "PS 06", "parent": {"L1": "120"}}, {"code": "2206", "name": "PS Rughaylat", "parent": {"L1": "120"}}, {"code": "2207", "name": "PS Sakamkam 1", "parent": {"L1": "120"}}, {"code": "2208", "name": "PS Sakamkam 2", "parent": {"L1": "120"}}, {"code": "2209", "name": "PS University 1", "parent": {"L1": "120"}}, {"code": "2210", "name": "PS University 2", "parent": {"L1": "120"}}, {"code": "2211", "name": "PS Al Owaid", "parent": {"L1": "120"}}, {"code": "2212", "name": "PS Mirbah", "parent": {"L1": "120"}}, {"code": "2213", "name": "PS Mirbah 1", "parent": {"L1": "120"}}, {"code": "2214", "name": "PS Mirbah 2.1", "parent": {"L1": "120"}}, {"code": "2215", "name": "PS Mirbah 2.2", "parent": {"L1": "120"}}, {"code": "2216", "name": "PS Mirbah 3", "parent": {"L1": "120"}}, {"code": "2217", "name": "PS Mirbah 6", "parent": {"L1": "120"}}, {"code": "2218", "name": "PS Qurayyah East", "parent": {"L1": "120"}}, {"code": "2219", "name": "PS Qurayyah Main", "parent": {"L1": "120"}}, {"code": "2220", "name": "PS Qurayyah West", "parent": {"L1": "120"}}, {"code": "2221", "name": "PS Thieb", "parent": {"L1": "120"}}, {"code": "2222", "name": "PS Navy Base 1", "parent": {"L1": "120"}}, {"code": "2223", "name": "PS N avy Base 2", "parent": {"L1": "120"}}, {"code": "2224", "name": "PS Qirath 2", "parent": {"L1": "120"}}, {"code": "2225", "name": "PS Qirath 1", "parent": {"L1": "120"}}, {"code": "2226", "name": "PS 3.1", "parent": {"L1": "120"}}, {"code": "2227", "name": "PS 4.1", "parent": {"L1": "120"}}, {"code": "2228", "name": "PS 5.1", "parent": {"L1": "120"}}, {"code": "2229", "name": "PS 6.1", "parent": {"L1": "120"}}, {"code": "2230", "name": "PS MBZC", "parent": {"L1": "120"}}, {"code": "2231", "name": "PS MBZC Lifting Station", "parent": {"L1": "120"}}, {"code": "2232", "name": "PS Free Zone 23", "parent": {"L1": "120"}}, {"code": "2233", "name": "ps general or consumables", "parent": {"L1": "120"}}, {"code": "2250", "name": "WWCN Air Release Valve Chambers", "parent": {"L1": "121"}}, {"code": "2251", "name": "WWCN Washout Chambers", "parent": {"L1": "121"}}, {"code": "2252", "name": "WWCN Manholes", "parent": {"L1": "121"}}, {"code": "2301", "name": "Electricity", "parent": {"L1": "122"}}, {"code": "2302", "name": "Potable Water", "parent": {"L1": "122"}}, {"code": "2303", "name": "Ferric Chloride", "parent": {"L1": "122"}}, {"code": "2304", "name": "Diesel (other consumers)", "parent": {"L1": "122"}}, {"code": "2305", "name": "Etisalat", "parent": {"L1": "122"}}, {"code": "2306", "name": "Consumables", "parent": {"L1": "122"}}, {"code": "2307", "name": "HSE: (PPE, testing, calibration, Hassantuk)", "parent": {"L1": "122"}}, {"code": "2308", "name": "Admin General", "parent": {"L1": "122"}}, {"code": "2350", "name": "Utilities", "parent": {"L1": "122"}}, {"code": "2260", "name": "Testing,Calibration,Verification and Other similar third party works", "parent": {"L1": "130"}}, {"code": "2501", "name": "M-83140_Toyota Pickup", "parent": {"L1": "150"}}, {"code": "2502", "name": "M-89053_Toyota Pickup", "parent": {"L1": "150"}}, {"code": "2503", "name": "M-91106_Toyota Pickup", "parent": {"L1": "150"}}, {"code": "2504", "name": "A-70801_Toyota Pickup", "parent": {"L1": "150"}}, {"code": "2505", "name": "M-72417_Toyota Pickup", "parent": {"L1": "150"}}, {"code": "2506", "name": "A-67955_Toyota Fortuner", "parent": {"L1": "150"}}, {"code": "2507", "name": "A-23076_Suction Tanker (New)", "parent": {"L1": "150"}}, {"code": "2508", "name": "G-28396_Skip Loader (Old)", "parent": {"L1": "150"}}, {"code": "2509", "name": "A-33728_Skip Loader (New)", "parent": {"L1": "150"}}, {"code": "2510", "name": "G-28608_Crane", "parent": {"L1": "150"}}, {"code": "2511", "name": "A-67618_Suction Tanker (Old)", "parent": {"L1": "150"}}, {"code": "2512", "name": "A-67842_Potable Water Tanker", "parent": {"L1": "150"}}, {"code": "2513", "name": "A-73562_Vac-Cone", "parent": {"L1": "150"}}, {"code": "2514", "name": "A-63861_Man lift", "parent": {"L1": "150"}}, {"code": "2515", "name": "A-73624_JCB", "parent": {"L1": "150"}}, {"code": "2516", "name": "A 72503_Forklift ", "parent": {"L1": "150"}}], "L3": [{"code": "30", "name": "Civil"}, {"code": "32", "name": "Electromechanical"}, {"code": "35", "name": "Vehicles"}, {"code": "36", "name": "Stores/Warehouse"}, {"code": "40", "name": "Utilities"}], "L4": [{"code": "401", "name": "Civil Works others (Road, footpath, perimeter wall, landscaping, illumination, perimeter wall) - WWTP", "parent": {"L3": "30"}}, {"code": "402", "name": "Civil Works for Process Structures and Tanks - WWTP", "parent": {"L3": "30"}}, {"code": "403", "name": "Civil Works for Buildings in General - WWTP", "parent": {"L3": "30"}}, {"code": "404", "name": "Civil Works for Buildings in General - PSS", "parent": {"L3": "30"}}, {"code": "405", "name": "Civil Works for Process Structures and Tanks - PSS", "parent": {"L3": "30"}}, {"code": "406", "name": "Civil Works others (Road, footpath, perimeter wall, landscaping, illumination, perimeter wall) - Pss", "parent": {"L3": "30"}}, {"code": "407", "name": "Air Release Valve Chambers _WWCN", "parent": {"L3": "30"}}, {"code": "408", "name": "Washout Chambers _WWCN", "parent": {"L3": "30"}}, {"code": "409", "name": "Manholes _WWCN", "parent": {"L3": "30"}}, {"code": "415", "name": "All Third party services cost", "parent": {"L3": "30"}}, {"code": "420", "name": "Pumps Internal Cost", "parent": {"L3": "32"}}, {"code": "421", "name": "Pumps External Cost", "parent": {"L3": "32"}}, {"code": "422", "name": "Motors Internal Cost", "parent": {"L3": "32"}}, {"code": "423", "name": "Motors External Cost", "parent": {"L3": "32"}}, {"code": "424", "name": "Emergency Generators Internal Cost", "parent": {"L3": "32"}}, {"code": "425", "name": "Emergency Generators External Cost", "parent": {"L3": "32"}}, {"code": "426", "name": "Gas Compressor Internal Cost", "parent": {"L3": "32"}}, {"code": "427", "name": "Gas Compressor External Cost", "parent": {"L3": "32"}}, {"code": "428", "name": "Electrical Equipment, Instruments, Automation Equipment & IT equipment Internal Cost", "parent": {"L3": "32"}}, {"code": "429", "name": "Electrical Equipment, Instruments, Automation Equipment & IT equipment External Cost", "parent": {"L3": "32"}}, {"code": "430", "name": "Inlet Screen", "parent": {"L3": "32"}}, {"code": "431", "name": "Blowers", "parent": {"L3": "32"}}, {"code": "432", "name": "Mixers", "parent": {"L3": "32"}}, {"code": "433", "name": "Mammoth Rotors", "parent": {"L3": "32"}}, {"code": "434", "name": "Belt Press & Belt Thickener in Old & New Dewatering Building", "parent": {"L3": "32"}}, {"code": "435", "name": "Hoists and Cranes", "parent": {"L3": "32"}}, {"code": "436", "name": "Process Pipes, All kinds of Mechanical valves, fittings, and accessories", "parent": {"L3": "32"}}, {"code": "437", "name": "Chemical Dosing Station (PSs only)", "parent": {"L3": "32"}}, {"code": "438", "name": "Other Equipment Internal Cost", "parent": {"L3": "32"}}, {"code": "439", "name": "Other Equipment External Cost", "parent": {"L3": "32"}}, {"code": "440", "name": "Other Costs (Internal & External)", "parent": {"L3": "32"}}, {"code": "445", "name": "Calibration and other similar third party works", "parent": {"L3": "32"}}, {"code": "450", "name": "Fuel", "parent": {"L3": "35"}}, {"code": "451", "name": "Insurance", "parent": {"L3": "35"}}, {"code": "452", "name": "Renewal fees and registration", "parent": {"L3": "35"}}, {"code": "453", "name": "Maintainance and Spare parts", "parent": {"L3": "35"}}, {"code": "454", "name": "Other Costs", "parent": {"L3": "35"}}, {"code": "450", "name": "Fuel", "parent": {"L3": "36"}}, {"code": "460", "name": "Leasing and Rental CostsOther Costs", "parent": {"L3": "36"}}, {"code": "465", "name": "Other Costs", "parent": {"L3": "36"}}, {"code": "500", "name": "Electricity", "parent": {"L3": "40"}}, {"code": "501", "name": "Etisalat", "parent": {"L3": "40"}}], "L5": [{"code": "5001", "name": "New KSB Pumps (WWTS)", "parent": {"L4": "420"}}, {"code": "5002", "name": "Mechanical Seal for KSB Pumps", "parent": {"L4": "420"}}, {"code": "5003", "name": "Impeller for KSB Pumps", "parent": {"L4": "420"}}, {"code": "5004", "name": "Bearings for KSB Pumps", "parent": {"L4": "420"}}, {"code": "5005", "name": "Pump Casing for KSB Pumps", "parent": {"L4": "420"}}, {"code": "5006", "name": "Discharge Cover for KSB Pumps", "parent": {"L4": "420"}}, {"code": "5007", "name": "Other Spare parts & parts required for repair of all KSB Pumps (WWTS)", "parent": {"L4": "420"}}, {"code": "5008", "name": "New Seepex Pumps (WWTP)", "parent": {"L4": "420"}}, {"code": "5009", "name": "Spare parts & parts required for repair of all Seepex Pumps (WWTP)", "parent": {"L4": "420"}}, {"code": "5010", "name": "New Diesel Pumps (WWTS)", "parent": {"L4": "420"}}, {"code": "5011", "name": "Spare parts & parts required for repair of all Diesel Pumps (WWTS)", "parent": {"L4": "420"}}, {"code": "5012", "name": "New Pumps of other Brands (WWTS)", "parent": {"L4": "420"}}, {"code": "5013", "name": "Spare parts & parts required for repair of all other Brands of Pumps (WWTS)", "parent": {"L4": "420"}}, {"code": "5020", "name": "All Third-Party Cost for Pumps (WWTS)", "parent": {"L4": "421"}}, {"code": "5030", "name": "New Motors (WWTS) ", "parent": {"L4": "422"}}, {"code": "5031", "name": "Spare parts & parts required for repair of Motors (WWTS) ", "parent": {"L4": "422"}}, {"code": "5035", "name": "All Third-Party Cost for Motors (WWTS)", "parent": {"L4": "423"}}, {"code": "5040", "name": "New Caterpillar Generators (WWTP & Dry well PS)", "parent": {"L4": "424"}}, {"code": "5041", "name": "New SDMO Generators (PS)", "parent": {"L4": "424"}}, {"code": "5042", "name": "New other Brands of Generators (WWTS) ", "parent": {"L4": "424"}}, {"code": "5043", "name": "Spare parts & parts required for repair of Caterpillar Generators (WWTS) ", "parent": {"L4": "424"}}, {"code": "5044", "name": "Spare parts & parts required for repair of SDMO Generators (PS) ", "parent": {"L4": "424"}}, {"code": "5045", "name": "Spare parts & parts required for repair of other Brands of Generators (WWTS)", "parent": {"L4": "424"}}, {"code": "5050", "name": "All Third-Party Cost for Generators (WWTS) ", "parent": {"L4": "425"}}, {"code": "5060", "name": "New Gas Compressor (WWTP) ", "parent": {"L4": "426"}}, {"code": "5061", "name": "Spare parts & parts required for repair of Gas Compressor (WWTP)", "parent": {"L4": "426"}}, {"code": "5070", "name": "All Third-Party Cost for Gas Compressor (WWTP) ", "parent": {"L4": "427"}}, {"code": "5080", "name": "New Electrical Equipment (WWTS)  ", "parent": {"L4": "428"}}, {"code": "5081", "name": "Spare parts & parts required for repair of Electrical Equipment (WWTS)", "parent": {"L4": "428"}}, {"code": "5082", "name": "New Instruments (WWTS) ", "parent": {"L4": "428"}}, {"code": "5083", "name": "Spare parts & parts required for repair of Instruments (WWTS)", "parent": {"L4": "428"}}, {"code": "5084", "name": "New Automation Equipment (WWTS) ", "parent": {"L4": "428"}}, {"code": "5085", "name": "Spare parts & parts required for repair of Automation Equipment (WWTS)", "parent": {"L4": "428"}}, {"code": "5086", "name": "New IT Equipment (WWTS) ", "parent": {"L4": "428"}}, {"code": "5087", "name": "Spare parts & parts required for repair of IT Equipment (WWTS)", "parent": {"L4": "428"}}, {"code": "5090", "name": "All Third-Party Cost for Electrical Equipment (WWTS)", "parent": {"L4": "429"}}, {"code": "5091", "name": "All Third-Party Cost for Instruments (WWTS)", "parent": {"L4": "429"}}, {"code": "5092", "name": "All Third-Party Cost for Automation Equipment (WWTS)", "parent": {"L4": "429"}}, {"code": "5093", "name": "All Third-Party Cost for IT Equipment (WWTS)", "parent": {"L4": "429"}}, {"code": "5100", "name": "New Inlet Screen Unit (WWTP) ", "parent": {"L4": "430"}}, {"code": "5101", "name": "Spare parts & parts required for repair of Inlet Screen Unit (WWTP)", "parent": {"L4": "430"}}, {"code": "5101", "name": "All External/Third-Party Cost for Inlet Screen (WWTP)", "parent": {"L4": "430"}}, {"code": "5110", "name": "New Blowers (WWTP)", "parent": {"L4": "431"}}, {"code": "5111", "name": "Spare parts & Internal cost of parts for repair of Blowers (WWTP)", "parent": {"L4": "431"}}, {"code": "5112", "name": "All External/Third-Party Cost for Blowers (WWTP)", "parent": {"L4": "431"}}, {"code": "5120", "name": "New Mixers", "parent": {"L4": "432"}}, {"code": "5121", "name": "Spare parts & Internal cost of parts for repair of Mixers (WWTP)", "parent": {"L4": "432"}}, {"code": "5122", "name": "All External/Third-Party Cost for Mixers (WWTP)", "parent": {"L4": "432"}}, {"code": "5130", "name": "New Mammoth Rotors, New Gear box & New End Bearings (WWTP)", "parent": {"L4": "433"}}, {"code": "5131", "name": "Spare parts & Internal cost of parts for repair of all units in Mammoth Rotors (WWTP)", "parent": {"L4": "433"}}, {"code": "5132", "name": "All External/Third-Party Cost for Mammoth Rotors (WWTP)", "parent": {"L4": "433"}}, {"code": "5140", "name": "New Belt Press, New Belt Thickener in Old & New Dewatering Building (WWTP)", "parent": {"L4": "434"}}, {"code": "5141", "name": "Spare parts & Internal cost of parts for repair of all units in Belt Press & Belt Thickener in Old & New Dewatering Building (WWTP)", "parent": {"L4": "434"}}, {"code": "5142", "name": "All External/Third-Party Cost for Belt Press & Belt Thickener in Old & New Dewatering Building (WWTP)", "parent": {"L4": "434"}}, {"code": "5150", "name": "New Hoist & Cranes (WWTP) ", "parent": {"L4": "435"}}, {"code": "5151", "name": "Spare parts & Internal cost of parts for repair of Hoist & Cranes (WWTP)", "parent": {"L4": "435"}}, {"code": "5152", "name": "All External/Third-Party Cost for Hoist & Cranes (WWTP)", "parent": {"L4": "435"}}, {"code": "5160", "name": "Pipes, Valves, Fittings & accessories (WWTS)", "parent": {"L4": "436"}}, {"code": "5161", "name": "Spare parts & Internal cost of parts for repair of Pipes, Valves, Fittings & accessories (WWTS)", "parent": {"L4": "436"}}, {"code": "5162", "name": "All External/Third-Party Cost for Pipes, Valves, Fittings & accessories ", "parent": {"L4": "436"}}, {"code": "5170", "name": "New Dosing Station units (Dry well & Wet well PS) ", "parent": {"L4": "437"}}, {"code": "5171", "name": "Spare parts & Internal cost of parts for repair of Chemical Dosing Station (Dry well & Wet well PS) ", "parent": {"L4": "437"}}, {"code": "5172", "name": "All External/Third-Party Cost for Chemical Dosing Station (Dry well & Wet well PS", "parent": {"L4": "437"}}, {"code": "5180", "name": "All other new equipment (WWTS)", "parent": {"L4": "438"}}, {"code": "5181", "name": "All other equipment spare parts & parts required for repair of equipment (WWTS)", "parent": {"L4": "438"}}, {"code": "5190", "name": "All Third-Party Cost for Other Equipment (WWTS) ", "parent": {"L4": "439"}}, {"code": "5200", "name": "All Other Costs for WWTS (Internal & External)", "parent": {"L4": "440"}}, {"code": "5210", "name": "All Third Part Services Cost", "parent": {"L4": "445"}}]},
+  rules: [
+    {
+      id: "rule_office_disable_L5",
+      enabled: true,
+      when: { L1: ["111", "122"], L2: ["2150", "2350"] },
+      effect: { disable: ["L5"], note: "Office L2 scopes do not use L5." },
+      priority: 10,
+    },
+    {
+      id: "rule_office_disable_L3_L4_L5",
+      enabled: true,
+      when: { L1: ["111", "122"] },
+      effect: { disable: ["L3","L4","L5"], note: "Office selections skip L3/L4/L5." },
+      priority: 1,
+    },
+    {
+      id: "rule_vehicle_or_civil_disable_L5",
+      enabled: true,
+      when: { L1: ["150"] },
+      effect: { disable: ["L5"], note: "Vehicles skip L5." },
+      priority: 5,
+    },
+    {
+      id: "rule_civil_disable_L5",
+      enabled: true,
+      when: { L3: ["30"] },
+      effect: { disable: ["L5"], note: "Civil often does not use L5." },
+      priority: 5,
+    },
+  ]
+};
+
+function loadStore() {
+  try { const s = localStorage.getItem(LS_KEY); if (s) return JSON.parse(s); } catch {}
+  return DEFAULT_DATASTORE;
+}
+function saveStore(ds) { localStorage.setItem(LS_KEY, JSON.stringify(ds)); }
+
+const levelsOrder = ["L1","L2","L3","L4","L5"];
+const levelLabels = { L1:"Level 1", L2:"Level 2", L3:"Level 3", L4:"Level 4", L5:"Level 5" };
+
+function normalizeText(s="") { return s.toLowerCase().trim(); }
+function codeName(o) { return `${o.code} — ${o.name}`; }
+function matchesParents(item, selection) {
+  if (!item.parent) return true;
+  return Object.entries(item.parent).every(([k,v]) => !v || selection[k]===v);
+}
+
+function ruleMatches(rule, selection) {
+  const { when = {} } = rule;
+  return Object.entries(when).every(([lvl, list]) => !list?.length || list.includes(selection[lvl]||""));
+}
+
+function applyRules(rules, selection) {
+  const active = (rules||[]).filter(r => r.enabled && ruleMatches(r, selection))
+                    .sort((a,b)=> (b.priority||0)-(a.priority||0));
+  const effects = { disable: new Set(), hide: new Set(), restrictOptions: { L2:null,L3:null,L4:null,L5:null }, notes: [] };
+  for (const r of active) {
+    r.effect?.disable?.forEach(l => effects.disable.add(l));
+    r.effect?.hide?.forEach(l => effects.hide.add(l));
+    if (r.effect?.restrictOptions) for (const [lvl, list] of Object.entries(r.effect.restrictOptions)) effects.restrictOptions[lvl] = list;
+    if (r.effect?.note) effects.notes.push(r.effect.note);
+  }
+  return { active, effects };
+}
+
+const Section = ({ title, children, right }) => (
+  <div className="rounded-2xl shadow p-4 md:p-6 bg-white/5 border border-white/10">
+    <div className="flex items-center justify-between gap-3 mb-3">
+      <h2 className="text-lg font-semibold">{title}</h2>
+      {right}
+    </div>
+    {children}
+  </div>
+);
+
+const Pill = ({children}) => (
+  <span className="inline-flex items-center px-2 py-0.5 text-xs rounded-full border border-white/20 text-white/80">{children}</span>
+);
+
+function SearchSelect({ label, disabled, value, onChange, options }) {
+  const [query, setQuery] = useState("");
+  const filtered = useMemo(() => {
+    const q = normalizeText(query);
+    if (!q) return options;
+    return options.filter(o => normalizeText(o.code+" "+o.name).includes(q));
+  }, [query, options]);
+
+  return (
+    <div className="space-y-1">
+      <label className="text-sm text-white/70">{label}</label>
+      <input
+        disabled={disabled}
+        className={`w-full rounded-xl border px-3 py-2 text-sm bg-black/30 border-white/15 outline-none focus:ring focus:ring-indigo-500/30 ${disabled?"opacity-60 cursor-not-allowed":""}`}
+        placeholder={disabled?"Disabled by rules":"Type to filter..."}
+        value={query}
+        onChange={e=>setQuery(e.target.value)}
+      />
+      <div className={`max-h-44 overflow-auto rounded-xl border bg-black/30 border-white/15 ${disabled?"opacity-60 pointer-events-none":""}`}>
+        {filtered.length===0 && <div className="p-2 text-sm text-white/60">No options</div>}
+        {filtered.map(o => (
+          <button key={o.code}
+            className={`w-full text-left px-3 py-2 text-sm hover:bg-white/10 ${value===o.code?"bg-indigo-500/20" : ""}`}
+            onClick={()=>onChange(o.code)}>
+            <div className="font-medium">{o.code}</div>
+            <div className="text-xs text-white/70">{o.name}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PasswordGate({ onSuccess }) {
+  const [input, setInput] = useState("");
+  const [error, setError] = useState("");
+
+  const checkPassword = () => {
+    if (input === "05012023") onSuccess();
+    else setError("Use Admin Password");
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+      <div className="bg-zinc-900 p-6 rounded-2xl shadow-lg max-w-sm w-full border border-white/10">
+        <h2 className="text-lg font-semibold mb-3">Admin Login</h2>
+        <input type="password" className="w-full rounded-xl border px-3 py-2 text-sm bg-black/30 border-white/15 mb-3"
+               placeholder="Enter Admin Password" value={input} onChange={(e)=>setInput(e.target.value)}/>
+        {error && <div className="text-red-400 text-sm mb-2">{error}</div>}
+        <button className="w-full px-3 py-2 text-sm rounded-xl bg-indigo-600 text-white" onClick={checkPassword}>Login</button>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [store, setStore] = useState(loadStore());
+  const [tab, setTab] = useState("builder");
+  const [unlocked, setUnlocked] = useState(false);
+  useEffect(()=> { saveStore(store); window._cccm_store = store; }, [store]);
+
+  const [sel, setSel] = useState({ L1:"", L2:"", L3:"", L4:"", L5:"" });
+  const code = levelsOrder.map(l => sel[l]||"xx").join("-");
+  const selectionWithObjects = useMemo(()=> {
+    const obj = {};
+    for (const l of levelsOrder) obj[l] = (store.levels[l]||[]).find(x => x.code === sel[l]);
+    return obj;
+  }, [sel, store]);
+
+  const { active: activeRules, effects } = useMemo(()=> applyRules(store.rules||[], sel), [store.rules, sel]);
+
+  const options = useMemo(() => {
+    const out = {};
+    for (const lvl of levelsOrder) {
+      let arr = store.levels[lvl] || [];
+      arr = arr.filter(it => matchesParents(it, sel));
+      const restrict = effects.restrictOptions?.[lvl];
+      if (restrict?.length) arr = arr.filter(it => restrict.includes(it.code));
+      if (lvl === 'L3' && sel.L1 === '121') {
+        const has40 = arr.some(a => a.code === '40');
+        if (!has40) arr = arr.concat([{ code: '40', name: 'Utilities', parent: { L1: '121' } }]);
+      }
+      out[lvl] = arr;
+    }
+    return out;
+  }, [store, sel, effects]);
+
+  const disabled = useMemo(()=> ({
+    L2: effects.disable.has("L2"),
+    L3: effects.disable.has("L3"),
+    L4: effects.disable.has("L4"),
+    L5: effects.disable.has("L5"),
+  }), [effects]);
+
+  const updateLevel = (lvl, codeVal) => {
+    setSel(prev => {
+      const idx = levelsOrder.indexOf(lvl);
+      const next = { ...prev, [lvl]: codeVal };
+      for (let i=idx+1; i<levelsOrder.length; i++) next[levelsOrder[i]] = "";
+      return next;
+    });
+  };
+
+  const copyToClipboard = async (text) => { try { await navigator.clipboard.writeText(text); alert("Copied!"); } catch {} };
+
+  const validateCode = (codeStr) => {
+    const depOf = { L2: "L1", L3: "L1", L4: "L3", L5: "L4" };
+    const parts = (codeStr||"").trim().split(/[-\s]+/);
+    const out = { ok:false, details:[], input:codeStr };
+
+    if (parts.length !== 5) {
+      out.details = levelsOrder.map((lvl, i) => ({ level: lvl, code: (parts[i]||'').toUpperCase(), name: "", valid: false, message: "Code must have 5 parts (L1-L5)." }));
+      return out;
+    }
+
+    const norm = p => (/^x{2}$/i.test(p) ? "" : p);
+    const [L1,L2,L3,L4,L5] = parts.map(norm);
+    const s = { L1,L2,L3,L4,L5 };
+    const { effects } = applyRules(store.rules||[], s);
+
+    const det = [];
+    for (const lvl of levelsOrder) {
+      const provided = s[lvl] || "";
+      const disabled = effects.disable.has(lvl);
+      let opts = (store.levels[lvl] || []).filter(it => matchesParents(it, s));
+      const restrict = effects.restrictOptions?.[lvl];
+      if (restrict?.length) opts = opts.filter(it => restrict.includes(it.code));
+      const found = (store.levels[lvl] || []).find(x => x.code === provided);
+      const name = found?.name || "";
+      let valid=false, message="";
+      if (disabled) {
+        valid = provided === "";
+        if (!valid) message = `${lvl} is disabled by rules.`;
+      } else if (opts.length===0) {
+        valid = provided === "";
+        if (!valid) message = `No ${lvl} expected for parents.`;
+      } else {
+        if (!provided) { valid=false; message=`Required ${lvl} is missing.`; }
+        else {
+          valid = !!opts.find(o => o.code === provided);
+          if (!valid) {
+            const dep = depOf[lvl];
+            message = dep ? `Not valid for ${dep} ${s[dep]||"—"}` : `Invalid ${lvl}.`;
+          }
+        }
+      }
+      det.push({ level:lvl, code:(provided||"xx").toUpperCase(), name, valid, message });
+    }
+    out.details = det;
+    out.ok = det.every(d=>d.valid);
+    return out;
+  };
+
+  const Builder = (
+    <div className="grid md:grid-cols-5 gap-4">
+      {levelsOrder.map(lvl => (
+        <Section key={lvl} title={`${levelLabels[lvl]} (${lvl})`} right={disabled[lvl] && <Pill>Disabled</Pill>}>
+          <SearchSelect label={`Pick ${lvl}`} disabled={!!disabled[lvl]} value={sel[lvl]}
+                        onChange={(v)=> updateLevel(lvl, v)} options={options[lvl]}/>
+        </Section>
+      ))}
+      <div className="md:col-span-5 space-y-4">
+        <Section title="Live Code">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="text-2xl font-mono tracking-widest">{code}</div>
+            <button className="px-3 py-2 text-sm rounded-xl bg-indigo-600 text-white" onClick={()=> copyToClipboard(code)}>Copy code</button>
+          </div>
+          {activeRules.length>0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {activeRules.map(r => <Pill key={r.id}>Rule: {r.id}</Pill>)}
+            </div>
+          )}
+          {effects.notes?.length>0 && (
+            <ul className="mt-2 list-disc list-inside text-sm text-white/70">
+              {effects.notes.map((n,i)=> <li key={i}>{n}</li>)}
+            </ul>
+          )}
+        </Section>
+        <Section title="Validate Code">
+          <Validator onValidate={validateCode} />
+        </Section>
+      </div>
+    </div>
+  );
+
+  const Admin = (
+    <div className="space-y-6">
+      <Section title="Draft / Publish" right={<Pill>Published at {new Date(store.publishedAt).toLocaleString()}</Pill>}>
+        <div className="flex flex-wrap gap-2">
+          <button className="px-3 py-2 text-sm rounded-xl border border-white/20" onClick={()=>{ 
+            const a = document.createElement('a');
+            const data = JSON.stringify(store, null, 2);
+            const blob = new Blob([data], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            a.href = url; a.download = `cccm_datastore_${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url);
+          }}>Export JSON</button>
+          <label className="px-3 py-2 text-sm rounded-xl border border-white/20 cursor-pointer">
+            Import JSON
+            <input type="file" className="hidden" accept="application/json" onChange={(e)=>{
+              const f = e.target.files?.[0]; if (!f) return;
+              const reader = new FileReader();
+              reader.onload = () => {
+                try {
+                  const json = JSON.parse(reader.result);
+                  if (!json.levels || !json.levels.L1) throw new Error("Invalid schema");
+                  setStore(json);
+                  alert("Imported and published.");
+                } catch(err) { alert("Import failed: "+err.message); }
+              };
+              reader.readAsText(f);
+            }} />
+          </label>
+        </div>
+      </Section>
+
+      <Section title="Levels (View / Quick Add)">
+        <div className="grid md:grid-cols-5 gap-4">
+          {levelsOrder.map(level => (
+            <div key={level} className="rounded-xl border border-white/15 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="font-semibold">{level} Items</div>
+              </div>
+              <div className="max-h-60 overflow-auto divide-y divide-white/10">
+                {(store.levels[level]||[]).map((o)=> (
+                  <div key={o.code} className="py-2 text-sm">
+                    <div className="font-mono">{o.code}</div>
+                    <div className="text-xs text-white/70">{o.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <header className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl md:text-3xl font-bold">Cost Center Code Manager</h1>
+          <div className="flex items-center gap-2">
+            <button className={`px-3 py-2 text-sm rounded-xl border border-white/20 ${tab==='builder'?'bg-white/10':''}`} onClick={()=> setTab('builder')}>Builder</button>
+            <button className={`px-3 py-2 text-sm rounded-xl border border-white/20 ${tab==='admin'?'bg-white/10':''}`} onClick={()=> setTab('admin')}>Admin</button>
+          </div>
+        </header>
+        {tab==='builder' ? Builder : (unlocked ? Admin : <PasswordGate onSuccess={()=>setUnlocked(true)} />)}
+      </div>
+    </div>
+  );
+}
+
+function Validator({ onValidate }) {
+  const [input, setInput] = useState("");
+  const [res, setRes] = useState(null);
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        <input className="flex-1 rounded-xl border px-3 py-2 text-sm bg-black/30 border-white/15"
+               placeholder="Paste code like 101-2100-30-401-0001 (use XX for empty levels)"
+               value={input} onChange={e=>setInput(e.target.value)} />
+        <button className="px-3 py-2 text-sm rounded-xl border border-white/20" onClick={()=> setRes(onValidate(input))}>Validate</button>
+      </div>
+      {res && (
+        <div className="space-y-2">
+          {res.details && res.details.map((d) => (
+            <div key={d.level} className={`rounded-xl p-3 border ${d.valid ? 'bg-green-900/30 text-green-200 border-green-700/40' : 'bg-red-900/30 text-red-200 border-red-700/40'}`}>
+              <div className="font-semibold">Level {levelsOrder.indexOf(d.level)+1}: {d.code}</div>
+              {d.name && <div className="text-sm opacity-90">{d.name}</div>}
+              {!d.valid && d.message && <div className="text-sm mt-1">{d.message}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>

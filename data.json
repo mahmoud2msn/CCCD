@@ -1,0 +1,1807 @@
+{
+  "version": 1,
+  "publishedAt": "2025-09-29T08:07:59.493Z",
+  "levels": {
+    "L1": [
+      {
+        "code": "101",
+        "name": "WWTP Mechanical Treatment: Location (A)"
+      },
+      {
+        "code": "102",
+        "name": "WWTP Biological Treatment: Location (B)"
+      },
+      {
+        "code": "103",
+        "name": "WWTP Sludge & Gas Path: Location (C)"
+      },
+      {
+        "code": "104",
+        "name": "WWTP Tertiary Treatment: Location (D)"
+      },
+      {
+        "code": "105",
+        "name": "WWTP Potable Water PS: Location (E)"
+      },
+      {
+        "code": "106",
+        "name": "WWTP Stormwater PS: Location (F)"
+      },
+      {
+        "code": "107",
+        "name": "WWTP Fire Alarm/Fire Fighting System and Network"
+      },
+      {
+        "code": "108",
+        "name": "WWTP MV/LV Building"
+      },
+      {
+        "code": "109",
+        "name": "WWTP Emergency Generators"
+      },
+      {
+        "code": "110",
+        "name": "WWTP (General Costs)"
+      },
+      {
+        "code": "111",
+        "name": "WWTP (Consumables ,Food and Other Costs)"
+      },
+      {
+        "code": "120",
+        "name": "WWCN Pumping Stations"
+      },
+      {
+        "code": "121",
+        "name": "WWCN Network"
+      },
+      {
+        "code": "122",
+        "name": "WWCN and PSs (General, Consumables & Other Costs)"
+      },
+      {
+        "code": "130",
+        "name": "WWTS External and Third party services cost"
+      },
+      {
+        "code": "150",
+        "name": "WWTS Vehicles"
+      }
+    ],
+    "L2": [
+      {
+        "code": "2001",
+        "name": "Tanker Reception Station",
+        "parent": {
+          "L1": "101"
+        }
+      },
+      {
+        "code": "2002",
+        "name": "Inlet Distribution Chamber",
+        "parent": {
+          "L1": "101"
+        }
+      },
+      {
+        "code": "2003",
+        "name": "Inlet Flowmeter",
+        "parent": {
+          "L1": "101"
+        }
+      },
+      {
+        "code": "2004",
+        "name": "Screening Building, Screening Unit and MCC Room",
+        "parent": {
+          "L1": "101"
+        }
+      },
+      {
+        "code": "2005",
+        "name": "Grit and Grease Chamber",
+        "parent": {
+          "L1": "101"
+        }
+      },
+      {
+        "code": "2006",
+        "name": "Primary Sedimentation Tank",
+        "parent": {
+          "L1": "101"
+        }
+      },
+      {
+        "code": "2007",
+        "name": "Primary Sludge Pumping Station",
+        "parent": {
+          "L1": "101"
+        }
+      },
+      {
+        "code": "2008",
+        "name": "Inlet Biofilter/Odor Control unit",
+        "parent": {
+          "L1": "101"
+        }
+      },
+      {
+        "code": "2020",
+        "name": "Distribution Chamber to Activated Sludge Tanks",
+        "parent": {
+          "L1": "102"
+        }
+      },
+      {
+        "code": "2021",
+        "name": "Aeration Tank",
+        "parent": {
+          "L1": "102"
+        }
+      },
+      {
+        "code": "2022",
+        "name": "Anaerobic Selector / Anoxic Tank",
+        "parent": {
+          "L1": "102"
+        }
+      },
+      {
+        "code": "2023",
+        "name": "Secondary Sedimentation Tanks",
+        "parent": {
+          "L1": "102"
+        }
+      },
+      {
+        "code": "2024",
+        "name": "Precipitation Dosing Station",
+        "parent": {
+          "L1": "102"
+        }
+      },
+      {
+        "code": "2025",
+        "name": "Return Sludge Pump Station (RAS PS)",
+        "parent": {
+          "L1": "102"
+        }
+      },
+      {
+        "code": "2040",
+        "name": "Supernatant Pumping Station",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2041",
+        "name": "Anaerobic Digestion/Digester/Recirculation PS/Digester Feed PS/Heat Exchanger/MCC Room",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2042",
+        "name": "Digested Sludge Storage Tank",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2043",
+        "name": "Surplus Sludge Pump Station (WAS PS)",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2044",
+        "name": "Sludge Mixing Tank",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2045",
+        "name": "Old Sludge Dewatering: Belt Filter Press/Digested Sludge Pumps/Belt Conveyor",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2046",
+        "name": "Old Dewatering Building: Polymer Dosing Station for Belt Press",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2047",
+        "name": "Old Dewatering Building: Sludge Thickening/Belt thickener 1 & 2/Polymer dosing station for Belt Thickener 1 & 2/Mixed Sludge Pumps/Thickened Sludge Pumps/Thickened Sludge Storage Tank ",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2048",
+        "name": "New Sludge Dewatering Building including all Equipment",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2049",
+        "name": "Gas Room",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2050",
+        "name": "Gas Compressor/Gas Injection System",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2051",
+        "name": "Gas Storage Tank/Gas Dewatering Shaft",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2052",
+        "name": "Gas Booster Station",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2053",
+        "name": "Boiler Station/Ceramic Filter",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2054",
+        "name": "Diesel Storage Tank",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2055",
+        "name": "Gas Flare/Gravel Filter",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2056",
+        "name": "Outlet Biofilter/ Odor Control unit",
+        "parent": {
+          "L1": "103"
+        }
+      },
+      {
+        "code": "2070",
+        "name": "Effluent Flowmeter & Valves",
+        "parent": {
+          "L1": "104"
+        }
+      },
+      {
+        "code": "2071",
+        "name": "Service Water Pump Station incl. Network",
+        "parent": {
+          "L1": "104"
+        }
+      },
+      {
+        "code": "2072",
+        "name": "Collection Chamber after Secondary Sedimentation",
+        "parent": {
+          "L1": "104"
+        }
+      },
+      {
+        "code": "2073",
+        "name": "Filtration/Backwash PS/Backwash Blower",
+        "parent": {
+          "L1": "104"
+        }
+      },
+      {
+        "code": "2074",
+        "name": "Chlorination",
+        "parent": {
+          "L1": "104"
+        }
+      },
+      {
+        "code": "2075",
+        "name": "Outlet Sampler and Sea Outfall",
+        "parent": {
+          "L1": "104"
+        }
+      },
+      {
+        "code": "2076",
+        "name": "Dirty Backwash Water Tank",
+        "parent": {
+          "L1": "104"
+        }
+      },
+      {
+        "code": "2077",
+        "name": "Clearwater Tank/Backwash Water System/Intermediate PS/Tanker Feed PS/Aeration Blowers/Outlet Flowmeter chamber",
+        "parent": {
+          "L1": "104"
+        }
+      },
+      {
+        "code": "2078",
+        "name": "Irrigation network system/Filtration",
+        "parent": {
+          "L1": "104"
+        }
+      },
+      {
+        "code": "2090",
+        "name": "Potable Water PS incl. Network",
+        "parent": {
+          "L1": "105"
+        }
+      },
+      {
+        "code": "2095",
+        "name": "Stormwater PS incl. pressure main",
+        "parent": {
+          "L1": "106"
+        }
+      },
+      {
+        "code": "2100",
+        "name": "Fire Alarm and Fire Fighting System",
+        "parent": {
+          "L1": "107"
+        }
+      },
+      {
+        "code": "2105",
+        "name": "MV/LV Building",
+        "parent": {
+          "L1": "108"
+        }
+      },
+      {
+        "code": "2110",
+        "name": "Emergency Generators",
+        "parent": {
+          "L1": "109"
+        }
+      },
+      {
+        "code": "2120",
+        "name": "Buildings (Operation Building, Service Building, Workshop, Store, Guardhouses) incl. AC-Service",
+        "parent": {
+          "L1": "110"
+        }
+      },
+      {
+        "code": "2121",
+        "name": "Fence & Gates",
+        "parent": {
+          "L1": "110"
+        }
+      },
+      {
+        "code": "2122",
+        "name": "Illumination (inside & outside)",
+        "parent": {
+          "L1": "110"
+        }
+      },
+      {
+        "code": "2123",
+        "name": "Roads, Footpaths",
+        "parent": {
+          "L1": "110"
+        }
+      },
+      {
+        "code": "2124",
+        "name": "Process Structures and Tanks-WWTP",
+        "parent": {
+          "L1": "110"
+        }
+      },
+      {
+        "code": "2130",
+        "name": "Electricity",
+        "parent": {
+          "L1": "111"
+        }
+      },
+      {
+        "code": "2131",
+        "name": "Potable Water",
+        "parent": {
+          "L1": "111"
+        }
+      },
+      {
+        "code": "2132",
+        "name": "Chlorine Gas",
+        "parent": {
+          "L1": "111"
+        }
+      },
+      {
+        "code": "2133",
+        "name": "Ferric Chloride",
+        "parent": {
+          "L1": "111"
+        }
+      },
+      {
+        "code": "2134",
+        "name": "Polyelectrolyte",
+        "parent": {
+          "L1": "111"
+        }
+      },
+      {
+        "code": "2135",
+        "name": "Diesel for Over Pumping",
+        "parent": {
+          "L1": "111"
+        }
+      },
+      {
+        "code": "2136",
+        "name": "Diesel (other consumers)",
+        "parent": {
+          "L1": "111"
+        }
+      },
+      {
+        "code": "2137",
+        "name": "Etisalat",
+        "parent": {
+          "L1": "111"
+        }
+      },
+      {
+        "code": "2138",
+        "name": "Consumables Workshop (Paint, Oil, Grease etc.)",
+        "parent": {
+          "L1": "111"
+        }
+      },
+      {
+        "code": "2139",
+        "name": "General Material Workshop (steel, nuts, bolts, welding consumables, material lathe etc.)",
+        "parent": {
+          "L1": "111"
+        }
+      },
+      {
+        "code": "2140",
+        "name": "Tools (Workshop, Landscaping etc.)",
+        "parent": {
+          "L1": "111"
+        }
+      },
+      {
+        "code": "2141",
+        "name": "HSE: (PPE, testing, calibration, Hassantuk)",
+        "parent": {
+          "L1": "111"
+        }
+      },
+      {
+        "code": "2144",
+        "name": "Admin General and Other cost",
+        "parent": {
+          "L1": "111"
+        }
+      },
+      {
+        "code": "2145",
+        "name": "Lab Expenses, lab consumables, external labs",
+        "parent": {
+          "L1": "111"
+        }
+      },
+      {
+        "code": "2146",
+        "name": "Food and refereshment",
+        "parent": {
+          "L1": "111"
+        }
+      },
+      {
+        "code": "2150",
+        "name": "Utilities",
+        "parent": {
+          "L1": "111"
+        }
+      },
+      {
+        "code": "2200",
+        "name": "PS 01",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2201",
+        "name": "PS 02",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2202",
+        "name": "PS 03",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2203",
+        "name": "PS 04",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2204",
+        "name": "PS 05",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2205",
+        "name": "PS 06",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2206",
+        "name": "PS Rughaylat",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2207",
+        "name": "PS Sakamkam 1",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2208",
+        "name": "PS Sakamkam 2",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2209",
+        "name": "PS University 1",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2210",
+        "name": "PS University 2",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2211",
+        "name": "PS Al Owaid",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2212",
+        "name": "PS Mirbah",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2213",
+        "name": "PS Mirbah 1",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2214",
+        "name": "PS Mirbah 2.1",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2215",
+        "name": "PS Mirbah 2.2",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2216",
+        "name": "PS Mirbah 3",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2217",
+        "name": "PS Mirbah 6",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2218",
+        "name": "PS Qurayyah East",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2219",
+        "name": "PS Qurayyah Main",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2220",
+        "name": "PS Qurayyah West",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2221",
+        "name": "PS Thieb",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2222",
+        "name": "PS Navy Base 1",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2223",
+        "name": "PS N avy Base 2",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2224",
+        "name": "PS Qirath 2",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2225",
+        "name": "PS Qirath 1",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2226",
+        "name": "PS 3.1",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2227",
+        "name": "PS 4.1",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2228",
+        "name": "PS 5.1",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2229",
+        "name": "PS 6.1",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2230",
+        "name": "PS MBZC",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2231",
+        "name": "PS MBZC Lifting Station",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2232",
+        "name": "PS Free Zone 23",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2233",
+        "name": "ps general or consumables",
+        "parent": {
+          "L1": "120"
+        }
+      },
+      {
+        "code": "2250",
+        "name": "WWCN Air Release Valve Chambers",
+        "parent": {
+          "L1": "121"
+        }
+      },
+      {
+        "code": "2251",
+        "name": "WWCN Washout Chambers",
+        "parent": {
+          "L1": "121"
+        }
+      },
+      {
+        "code": "2252",
+        "name": "WWCN Manholes",
+        "parent": {
+          "L1": "121"
+        }
+      },
+      {
+        "code": "2301",
+        "name": "Electricity",
+        "parent": {
+          "L1": "122"
+        }
+      },
+      {
+        "code": "2302",
+        "name": "Potable Water",
+        "parent": {
+          "L1": "122"
+        }
+      },
+      {
+        "code": "2303",
+        "name": "Ferric Chloride",
+        "parent": {
+          "L1": "122"
+        }
+      },
+      {
+        "code": "2304",
+        "name": "Diesel (other consumers)",
+        "parent": {
+          "L1": "122"
+        }
+      },
+      {
+        "code": "2305",
+        "name": "Etisalat",
+        "parent": {
+          "L1": "122"
+        }
+      },
+      {
+        "code": "2306",
+        "name": "Consumables",
+        "parent": {
+          "L1": "122"
+        }
+      },
+      {
+        "code": "2307",
+        "name": "HSE: (PPE, testing, calibration, Hassantuk)",
+        "parent": {
+          "L1": "122"
+        }
+      },
+      {
+        "code": "2308",
+        "name": "Admin General",
+        "parent": {
+          "L1": "122"
+        }
+      },
+      {
+        "code": "2350",
+        "name": "Utilities",
+        "parent": {
+          "L1": "122"
+        }
+      },
+      {
+        "code": "2260",
+        "name": "Testing,Calibration,Verification and Other similar third party works",
+        "parent": {
+          "L1": "130"
+        }
+      },
+      {
+        "code": "2501",
+        "name": "M-83140_Toyota Pickup",
+        "parent": {
+          "L1": "150"
+        }
+      },
+      {
+        "code": "2502",
+        "name": "M-89053_Toyota Pickup",
+        "parent": {
+          "L1": "150"
+        }
+      },
+      {
+        "code": "2503",
+        "name": "M-91106_Toyota Pickup",
+        "parent": {
+          "L1": "150"
+        }
+      },
+      {
+        "code": "2504",
+        "name": "A-70801_Toyota Pickup",
+        "parent": {
+          "L1": "150"
+        }
+      },
+      {
+        "code": "2505",
+        "name": "M-72417_Toyota Pickup",
+        "parent": {
+          "L1": "150"
+        }
+      },
+      {
+        "code": "2506",
+        "name": "A-67955_Toyota Fortuner",
+        "parent": {
+          "L1": "150"
+        }
+      },
+      {
+        "code": "2507",
+        "name": "25261_Iveco Trakker 380 Suction Tanker-Old(A-23076)-2009",
+        "parent": {
+          "L1": "150"
+        },
+        "level": "L2"
+      },
+      {
+        "code": "2508",
+        "name": "28396-Nissan PK210 Skip Loader-Old(A/23079)-2008",
+        "parent": {
+          "L1": "150"
+        },
+        "level": "L2"
+      },
+      {
+        "code": "2509",
+        "name": "26905_Nissan UD Quester Skip Loader-Old(A/33728)-2018",
+        "parent": {
+          "L1": "150"
+        },
+        "level": "L2"
+      },
+      {
+        "code": "2510",
+        "name": "28608-Nissan PK210 Crane-Old(A/65623)-2007",
+        "parent": {
+          "L1": "150"
+        },
+        "level": "L2"
+      },
+      {
+        "code": "2511",
+        "name": "23432_Iveco Trakker 380 Suction Tanker -Old A-67618-2007",
+        "parent": {
+          "L1": "150"
+        },
+        "level": "L2"
+      },
+      {
+        "code": "2512",
+        "name": "27502-Nissan PK210 Potable Water Tanker-Old(A/67842)-2007",
+        "parent": {
+          "L1": "150"
+        },
+        "level": "L2"
+      },
+      {
+        "code": "2513",
+        "name": "26120-Nissan UD Vac-Con Unit-Old(A/73562)-2007",
+        "parent": {
+          "L1": "150"
+        },
+        "level": "L2"
+      },
+      {
+        "code": "2514",
+        "name": "A-63861_Man lift",
+        "parent": {
+          "L1": "150"
+        }
+      },
+      {
+        "code": "2515",
+        "name": "25519-JCB-CXB Backhoe-Old(A/73624)-2008",
+        "parent": {
+          "L1": "150"
+        },
+        "level": "L2"
+      },
+      {
+        "code": "2516",
+        "name": "39757-Linde Forklift-Old(A/72503)-2008",
+        "parent": {
+          "L1": "150"
+        },
+        "level": "L2"
+      },
+      {
+        "code": "2517",
+        "name": "64032-Toyota Hilux Pickup -2025",
+        "parent": {
+          "L1": "150"
+        },
+        "level": "L2"
+      },
+      {
+        "code": "2518",
+        "name": "64033-Toyota Hilux Pickup-2025",
+        "parent": {
+          "L1": "150"
+        },
+        "level": "L2"
+      },
+      {
+        "code": "2519",
+        "name": "39462-Nissan UD Quester Suction Tanker-2025",
+        "parent": {
+          "L1": "150"
+        },
+        "level": "L2"
+      }
+    ],
+    "L3": [
+      {
+        "code": "30",
+        "name": "Civil Works"
+      },
+      {
+        "code": "32",
+        "name": "Electromechanical Works"
+      },
+      {
+        "code": "35",
+        "name": "Vehicles"
+      },
+      {
+        "code": "36",
+        "name": "Stores/Warehouse"
+      },
+      {
+        "code": "37",
+        "name": "Utilities"
+      }
+    ],
+    "L4": [
+      {
+        "code": "401",
+        "name": "Civil Works others (Road, footpath, perimeter wall, landscaping, illumination, perimeter wall) - WWTP",
+        "parent": {
+          "L3": "30"
+        }
+      },
+      {
+        "code": "402",
+        "name": "Civil Works for Process Structures and Tanks - WWTP",
+        "parent": {
+          "L3": "30"
+        }
+      },
+      {
+        "code": "403",
+        "name": "Civil Works for Buildings in General - WWTP",
+        "parent": {
+          "L3": "30"
+        }
+      },
+      {
+        "code": "404",
+        "name": "Civil Works for Buildings in General - PSS",
+        "parent": {
+          "L3": "30"
+        }
+      },
+      {
+        "code": "405",
+        "name": "Civil Works for Process Structures and Tanks - PSS",
+        "parent": {
+          "L3": "30"
+        }
+      },
+      {
+        "code": "406",
+        "name": "Civil Works others (Road, footpath, perimeter wall, landscaping, illumination, perimeter wall) - Pss",
+        "parent": {
+          "L3": "30"
+        }
+      },
+      {
+        "code": "407",
+        "name": "Air Release Valve Chambers _WWCN",
+        "parent": {
+          "L3": "30"
+        }
+      },
+      {
+        "code": "408",
+        "name": "Washout Chambers _WWCN",
+        "parent": {
+          "L3": "30"
+        }
+      },
+      {
+        "code": "409",
+        "name": "Manholes _WWCN",
+        "parent": {
+          "L3": "30"
+        }
+      },
+      {
+        "code": "415",
+        "name": "All Third party services cost",
+        "parent": {
+          "L3": "30"
+        }
+      },
+      {
+        "code": "420",
+        "name": "Pumps Internal Cost",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "421",
+        "name": "Pumps External Cost",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "422",
+        "name": "Motors Internal Cost",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "423",
+        "name": "Motors External Cost",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "424",
+        "name": "Emergency Generators Internal Cost",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "425",
+        "name": "Emergency Generators External Cost",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "426",
+        "name": "Gas Compressor Internal Cost",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "427",
+        "name": "Gas Compressor External Cost",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "428",
+        "name": "Electrical Equipment, Instruments, Automation Equipment & IT equipment Internal Cost",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "429",
+        "name": "Electrical Equipment, Instruments, Automation Equipment & IT equipment External Cost",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "430",
+        "name": "Inlet Screen",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "431",
+        "name": "Blowers",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "432",
+        "name": "Mixers",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "433",
+        "name": "Mammoth Rotors",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "434",
+        "name": "Belt Press & Belt Thickener in Old & New Dewatering Building",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "435",
+        "name": "Hoists and Cranes",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "436",
+        "name": "Process Pipes, All kinds of Mechanical valves, fittings, and accessories",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "437",
+        "name": "Chemical Dosing Station (PSs only)",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "438",
+        "name": "Other Equipment Internal Cost",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "439",
+        "name": "Other Equipment External Cost",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "440",
+        "name": "Other Costs (Internal & External)",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "445",
+        "name": "Calibration and other similar third party works",
+        "parent": {
+          "L3": "32"
+        }
+      },
+      {
+        "code": "450",
+        "name": "Fuel",
+        "parent": {
+          "L3": "35"
+        }
+      },
+      {
+        "code": "451",
+        "name": "Insurance",
+        "parent": {
+          "L3": "35"
+        }
+      },
+      {
+        "code": "452",
+        "name": "Renewal fees and registration",
+        "parent": {
+          "L3": "35"
+        }
+      },
+      {
+        "code": "453",
+        "name": "Maintainance and Spare parts",
+        "parent": {
+          "L3": "35"
+        }
+      },
+      {
+        "code": "454",
+        "name": "Other Costs",
+        "parent": {
+          "L3": "35"
+        }
+      },
+      {
+        "code": "450",
+        "name": "Fuel",
+        "parent": {
+          "L3": "36"
+        }
+      },
+      {
+        "code": "460",
+        "name": "Leasing and Rental CostsOther Costs",
+        "parent": {
+          "L3": "36"
+        }
+      },
+      {
+        "code": "465",
+        "name": "Other Costs",
+        "parent": {
+          "L3": "36"
+        }
+      },
+      {
+        "code": "466",
+        "name": "Electricity",
+        "parent": {
+          "L3": "37"
+        }
+      },
+      {
+        "code": "501",
+        "name": "Etisalat",
+        "parent": {
+          "L3": "37"
+        }
+      }
+    ],
+    "L5": [
+      {
+        "code": "5001",
+        "name": "New KSB Pumps (WWTS)",
+        "parent": {
+          "L4": "420"
+        }
+      },
+      {
+        "code": "5002",
+        "name": "Mechanical Seal for KSB Pumps",
+        "parent": {
+          "L4": "420"
+        }
+      },
+      {
+        "code": "5003",
+        "name": "Impeller for KSB Pumps",
+        "parent": {
+          "L4": "420"
+        }
+      },
+      {
+        "code": "5004",
+        "name": "Bearings for KSB Pumps",
+        "parent": {
+          "L4": "420"
+        }
+      },
+      {
+        "code": "5005",
+        "name": "Pump Casing for KSB Pumps",
+        "parent": {
+          "L4": "420"
+        }
+      },
+      {
+        "code": "5006",
+        "name": "Discharge Cover for KSB Pumps",
+        "parent": {
+          "L4": "420"
+        }
+      },
+      {
+        "code": "5007",
+        "name": "Other Spare parts & parts required for repair of all KSB Pumps (WWTS)",
+        "parent": {
+          "L4": "420"
+        }
+      },
+      {
+        "code": "5008",
+        "name": "New Seepex Pumps (WWTP)",
+        "parent": {
+          "L4": "420"
+        }
+      },
+      {
+        "code": "5009",
+        "name": "Spare parts & parts required for repair of all Seepex Pumps (WWTP)",
+        "parent": {
+          "L4": "420"
+        }
+      },
+      {
+        "code": "5010",
+        "name": "New Diesel Pumps (WWTS)",
+        "parent": {
+          "L4": "420"
+        }
+      },
+      {
+        "code": "5011",
+        "name": "Spare parts & parts required for repair of all Diesel Pumps (WWTS)",
+        "parent": {
+          "L4": "420"
+        }
+      },
+      {
+        "code": "5012",
+        "name": "New Pumps of other Brands (WWTS)",
+        "parent": {
+          "L4": "420"
+        }
+      },
+      {
+        "code": "5013",
+        "name": "Spare parts & parts required for repair of all other Brands of Pumps (WWTS)",
+        "parent": {
+          "L4": "420"
+        }
+      },
+      {
+        "code": "5020",
+        "name": "All Third-Party Cost for Pumps (WWTS)",
+        "parent": {
+          "L4": "421"
+        }
+      },
+      {
+        "code": "5030",
+        "name": "New Motors (WWTS) ",
+        "parent": {
+          "L4": "422"
+        }
+      },
+      {
+        "code": "5031",
+        "name": "Spare parts & parts required for repair of Motors (WWTS) ",
+        "parent": {
+          "L4": "422"
+        }
+      },
+      {
+        "code": "5035",
+        "name": "All Third-Party Cost for Motors (WWTS)",
+        "parent": {
+          "L4": "423"
+        }
+      },
+      {
+        "code": "5040",
+        "name": "New Caterpillar Generators (WWTP & Dry well PS)",
+        "parent": {
+          "L4": "424"
+        }
+      },
+      {
+        "code": "5041",
+        "name": "New SDMO Generators (PS)",
+        "parent": {
+          "L4": "424"
+        }
+      },
+      {
+        "code": "5042",
+        "name": "New other Brands of Generators (WWTS) ",
+        "parent": {
+          "L4": "424"
+        }
+      },
+      {
+        "code": "5043",
+        "name": "Spare parts & parts required for repair of Caterpillar Generators (WWTS) ",
+        "parent": {
+          "L4": "424"
+        }
+      },
+      {
+        "code": "5044",
+        "name": "Spare parts & parts required for repair of SDMO Generators (PS) ",
+        "parent": {
+          "L4": "424"
+        }
+      },
+      {
+        "code": "5045",
+        "name": "Spare parts & parts required for repair of other Brands of Generators (WWTS)",
+        "parent": {
+          "L4": "424"
+        }
+      },
+      {
+        "code": "5050",
+        "name": "All Third-Party Cost for Generators (WWTS) ",
+        "parent": {
+          "L4": "425"
+        }
+      },
+      {
+        "code": "5060",
+        "name": "New Gas Compressor (WWTP) ",
+        "parent": {
+          "L4": "426"
+        }
+      },
+      {
+        "code": "5061",
+        "name": "Spare parts & parts required for repair of Gas Compressor (WWTP)",
+        "parent": {
+          "L4": "426"
+        }
+      },
+      {
+        "code": "5070",
+        "name": "All Third-Party Cost for Gas Compressor (WWTP) ",
+        "parent": {
+          "L4": "427"
+        }
+      },
+      {
+        "code": "5080",
+        "name": "New Electrical Equipment (WWTS)  ",
+        "parent": {
+          "L4": "428"
+        }
+      },
+      {
+        "code": "5081",
+        "name": "Spare parts & parts required for repair of Electrical Equipment (WWTS)",
+        "parent": {
+          "L4": "428"
+        }
+      },
+      {
+        "code": "5082",
+        "name": "New Instruments (WWTS) ",
+        "parent": {
+          "L4": "428"
+        }
+      },
+      {
+        "code": "5083",
+        "name": "Spare parts & parts required for repair of Instruments (WWTS)",
+        "parent": {
+          "L4": "428"
+        }
+      },
+      {
+        "code": "5084",
+        "name": "New Automation Equipment (WWTS) ",
+        "parent": {
+          "L4": "428"
+        }
+      },
+      {
+        "code": "5085",
+        "name": "Spare parts & parts required for repair of Automation Equipment (WWTS)",
+        "parent": {
+          "L4": "428"
+        }
+      },
+      {
+        "code": "5086",
+        "name": "New IT Equipment (WWTS) ",
+        "parent": {
+          "L4": "428"
+        }
+      },
+      {
+        "code": "5087",
+        "name": "Spare parts & parts required for repair of IT Equipment (WWTS)",
+        "parent": {
+          "L4": "428"
+        }
+      },
+      {
+        "code": "5090",
+        "name": "All Third-Party Cost for Electrical Equipment (WWTS)",
+        "parent": {
+          "L4": "429"
+        }
+      },
+      {
+        "code": "5091",
+        "name": "All Third-Party Cost for Instruments (WWTS)",
+        "parent": {
+          "L4": "429"
+        }
+      },
+      {
+        "code": "5092",
+        "name": "All Third-Party Cost for Automation Equipment (WWTS)",
+        "parent": {
+          "L4": "429"
+        }
+      },
+      {
+        "code": "5093",
+        "name": "All Third-Party Cost for IT Equipment (WWTS)",
+        "parent": {
+          "L4": "429"
+        }
+      },
+      {
+        "code": "5100",
+        "name": "New Inlet Screen Unit (WWTP) ",
+        "parent": {
+          "L4": "430"
+        }
+      },
+      {
+        "code": "5101",
+        "name": "Spare parts & parts required for repair of Inlet Screen Unit (WWTP)",
+        "parent": {
+          "L4": "430"
+        }
+      },
+      {
+        "code": "5101",
+        "name": "All External/Third-Party Cost for Inlet Screen (WWTP)",
+        "parent": {
+          "L4": "430"
+        }
+      },
+      {
+        "code": "5110",
+        "name": "New Blowers (WWTP)",
+        "parent": {
+          "L4": "431"
+        }
+      },
+      {
+        "code": "5111",
+        "name": "Spare parts & Internal cost of parts for repair of Blowers (WWTP)",
+        "parent": {
+          "L4": "431"
+        }
+      },
+      {
+        "code": "5112",
+        "name": "All External/Third-Party Cost for Blowers (WWTP)",
+        "parent": {
+          "L4": "431"
+        }
+      },
+      {
+        "code": "5120",
+        "name": "New Mixers",
+        "parent": {
+          "L4": "432"
+        }
+      },
+      {
+        "code": "5121",
+        "name": "Spare parts & Internal cost of parts for repair of Mixers (WWTP)",
+        "parent": {
+          "L4": "432"
+        }
+      },
+      {
+        "code": "5122",
+        "name": "All External/Third-Party Cost for Mixers (WWTP)",
+        "parent": {
+          "L4": "432"
+        }
+      },
+      {
+        "code": "5130",
+        "name": "New Mammoth Rotors, New Gear box & New End Bearings (WWTP)",
+        "parent": {
+          "L4": "433"
+        }
+      },
+      {
+        "code": "5131",
+        "name": "Spare parts & Internal cost of parts for repair of all units in Mammoth Rotors (WWTP)",
+        "parent": {
+          "L4": "433"
+        }
+      },
+      {
+        "code": "5132",
+        "name": "All External/Third-Party Cost for Mammoth Rotors (WWTP)",
+        "parent": {
+          "L4": "433"
+        }
+      },
+      {
+        "code": "5140",
+        "name": "New Belt Press, New Belt Thickener in Old & New Dewatering Building (WWTP)",
+        "parent": {
+          "L4": "434"
+        }
+      },
+      {
+        "code": "5141",
+        "name": "Spare parts & Internal cost of parts for repair of all units in Belt Press & Belt Thickener in Old & New Dewatering Building (WWTP)",
+        "parent": {
+          "L4": "434"
+        }
+      },
+      {
+        "code": "5142",
+        "name": "All External/Third-Party Cost for Belt Press & Belt Thickener in Old & New Dewatering Building (WWTP)",
+        "parent": {
+          "L4": "434"
+        }
+      },
+      {
+        "code": "5150",
+        "name": "New Hoist & Cranes (WWTP) ",
+        "parent": {
+          "L4": "435"
+        }
+      },
+      {
+        "code": "5151",
+        "name": "Spare parts & Internal cost of parts for repair of Hoist & Cranes (WWTP)",
+        "parent": {
+          "L4": "435"
+        }
+      },
+      {
+        "code": "5152",
+        "name": "All External/Third-Party Cost for Hoist & Cranes (WWTP)",
+        "parent": {
+          "L4": "435"
+        }
+      },
+      {
+        "code": "5160",
+        "name": "Pipes, Valves, Fittings & accessories (WWTS)",
+        "parent": {
+          "L4": "436"
+        }
+      },
+      {
+        "code": "5161",
+        "name": "Spare parts & Internal cost of parts for repair of Pipes, Valves, Fittings & accessories (WWTS)",
+        "parent": {
+          "L4": "436"
+        }
+      },
+      {
+        "code": "5162",
+        "name": "All External/Third-Party Cost for Pipes, Valves, Fittings & accessories ",
+        "parent": {
+          "L4": "436"
+        }
+      },
+      {
+        "code": "5170",
+        "name": "New Dosing Station units (Dry well & Wet well PS) ",
+        "parent": {
+          "L4": "437"
+        }
+      },
+      {
+        "code": "5171",
+        "name": "Spare parts & Internal cost of parts for repair of Chemical Dosing Station (Dry well & Wet well PS) ",
+        "parent": {
+          "L4": "437"
+        }
+      },
+      {
+        "code": "5172",
+        "name": "All External/Third-Party Cost for Chemical Dosing Station (Dry well & Wet well PS",
+        "parent": {
+          "L4": "437"
+        }
+      },
+      {
+        "code": "5180",
+        "name": "All other new equipment (WWTS)",
+        "parent": {
+          "L4": "438"
+        }
+      },
+      {
+        "code": "5181",
+        "name": "All other equipment spare parts & parts required for repair of equipment (WWTS)",
+        "parent": {
+          "L4": "438"
+        }
+      },
+      {
+        "code": "5190",
+        "name": "All Third-Party Cost for Other Equipment (WWTS) ",
+        "parent": {
+          "L4": "439"
+        }
+      },
+      {
+        "code": "5200",
+        "name": "All Other Costs for WWTS (Internal & External)",
+        "parent": {
+          "L4": "440"
+        }
+      },
+      {
+        "code": "5210",
+        "name": "All Third Part Services Cost",
+        "parent": {
+          "L4": "445"
+        }
+      }
+    ]
+  },
+  "rules": []
+}
