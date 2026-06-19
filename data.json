@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "publishedAt": "2026-06-19T07:38:13.814Z",
+  "publishedAt": "2026-06-19T07:39:28.764Z",
   "levels": {
     "L1": [
       {
@@ -66,10 +66,6 @@
       {
         "code": "150",
         "name": "WWTS Vehicles"
-      },
-      {
-        "code": "123456",
-        "name": "Mahmoud"
       }
     ],
     "L2": [
