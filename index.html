@@ -5,575 +5,788 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cost Center Code Manager</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>html, body { height: 100%; } body { background: #0a0a0a; }</style>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+  <style>
+    html,body{height:100%;}
+    body{background:#0a0a0a;}
+    .scrollbar-thin::-webkit-scrollbar{width:4px;height:4px;}
+    .scrollbar-thin::-webkit-scrollbar-track{background:transparent;}
+    .scrollbar-thin::-webkit-scrollbar-thumb{background:#444;border-radius:4px;}
+  </style>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.23.2/babel.min.js"></script>
 </head>
 <body class="text-zinc-100">
   <div id="root"></div>
+<script type="text/babel" data-presets="react,env">
 
-<script type="text/babel">
-const { useEffect, useMemo, useState, useCallback, useRef } = React;
+var useState    = React.useState;
+var useEffect   = React.useEffect;
+var useMemo     = React.useMemo;
 
-// ─── GitHub Config (edit these after uploading to GitHub) ────────────────────
-// Users fill these in via the GitHub Settings panel in the Admin tab.
-// They are stored in localStorage so they don't need to re-enter them.
-const GH_CONFIG_KEY = "cccm_gh_config_v1";
-const LS_STORE_KEY  = "cccm_datastore_v2";
+/* ════════════════════════════════════════
+   STORAGE
+═════════════════════════════════════════ */
+var GH_KEY    = "cccm_gh_v1";
+var STORE_KEY = "cccm_store_v3";
 
-function loadGhConfig() {
-  try { const s = localStorage.getItem(GH_CONFIG_KEY); if (s) return JSON.parse(s); } catch {}
-  return { owner: "", repo: "", branch: "main", path: "data.json", token: "" };
+function loadGhCfg(){
+  try{ var s=localStorage.getItem(GH_KEY); if(s) return JSON.parse(s); }catch(e){}
+  return {owner:"",repo:"",branch:"main",path:"data.json",token:""};
 }
-function saveGhConfig(cfg) { localStorage.setItem(GH_CONFIG_KEY, JSON.stringify(cfg)); }
-
-// ─── Local data cache ────────────────────────────────────────────────────────
-function loadLocalStore() {
-  try { const s = localStorage.getItem(LS_STORE_KEY); if (s) return JSON.parse(s); } catch {}
+function saveGhCfg(c){ localStorage.setItem(GH_KEY,JSON.stringify(c)); }
+function loadCache(){
+  try{ var s=localStorage.getItem(STORE_KEY); if(s) return JSON.parse(s); }catch(e){}
   return null;
 }
-function saveLocalStore(ds) { localStorage.setItem(LS_STORE_KEY, JSON.stringify(ds)); }
+function saveCache(ds){ localStorage.setItem(STORE_KEY,JSON.stringify(ds)); }
 
-// ─── GitHub API helpers ──────────────────────────────────────────────────────
-async function ghFetch(cfg, method, body) {
-  const { owner, repo, branch, path, token } = cfg;
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-  const headers = {
-    "Authorization": `Bearer ${token}`,
-    "Accept": "application/vnd.github+json",
-    "Content-Type": "application/json",
+/* ════════════════════════════════════════
+   GITHUB API
+═════════════════════════════════════════ */
+async function ghGet(cfg){
+  var url="https://api.github.com/repos/"+cfg.owner+"/"+cfg.repo+"/contents/"+cfg.path+"?ref="+cfg.branch;
+  var res=await fetch(url,{headers:{Authorization:"Bearer "+cfg.token,Accept:"application/vnd.github+json"}});
+  if(!res.ok){ var e=await res.json().catch(function(){return {};}); throw new Error(e.message||"GitHub "+res.status); }
+  var data=await res.json();
+  return { store:JSON.parse(atob(data.content.replace(/\n/g,""))), sha:data.sha };
+}
+async function ghPut(cfg,store,sha){
+  var url="https://api.github.com/repos/"+cfg.owner+"/"+cfg.repo+"/contents/"+cfg.path;
+  var body={
+    message:"Update data.json "+new Date().toISOString(),
+    content:btoa(unescape(encodeURIComponent(JSON.stringify(store,null,2)))),
+    branch:cfg.branch
   };
-  const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `GitHub API error ${res.status}`);
-  }
+  if(sha) body.sha=sha;
+  var res=await fetch(url,{method:"PUT",headers:{Authorization:"Bearer "+cfg.token,Accept:"application/vnd.github+json","Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(!res.ok){ var e=await res.json().catch(function(){return {};}); throw new Error(e.message||"GitHub "+res.status); }
   return res.json();
 }
 
-async function fetchFromGitHub(cfg) {
-  const data = await ghFetch(cfg, "GET");
-  const json = JSON.parse(atob(data.content.replace(/\n/g, "")));
-  return { store: json, sha: data.sha };
-}
+/* ════════════════════════════════════════
+   CONSTANTS & HELPERS
+═════════════════════════════════════════ */
+var LEVELS  = ["L1","L2","L3","L4","L5"];
+var LABELS  = {L1:"Level 1",L2:"Level 2",L3:"Level 3",L4:"Level 4",L5:"Level 5"};
+/* which level is the "parent selector" for each level in the builder */
+var PARENT_OF = {L1:null, L2:"L1", L3:"L1", L4:"L3", L5:"L4"};
 
-async function saveToGitHub(cfg, store, sha) {
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(store, null, 2))));
-  const body = {
-    message: `Update data.json — ${new Date().toISOString()}`,
-    content,
-    branch: cfg.branch,
-    ...(sha ? { sha } : {}),
-  };
-  return ghFetch(cfg, "PUT", body);
-}
+function norm(s){ return (s||"").toLowerCase().trim(); }
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-const levelsOrder = ["L1","L2","L3","L4","L5"];
-const levelLabels = { L1:"Level 1", L2:"Level 2", L3:"Level 3", L4:"Level 4", L5:"Level 5" };
-
-function normalizeText(s="") { return s.toLowerCase().trim(); }
-function matchesParents(item, selection) {
-  if (!item.parent) return true;
-  return Object.entries(item.parent).every(([k,v]) => !v || selection[k]===v);
-}
-function ruleMatches(rule, selection) {
-  const { when = {} } = rule;
-  return Object.entries(when).every(([lvl, list]) => !list?.length || list.includes(selection[lvl]||""));
-}
-function applyRules(rules, selection) {
-  const active = (rules||[]).filter(r => r.enabled && ruleMatches(r, selection))
-                    .sort((a,b)=> (b.priority||0)-(a.priority||0));
-  const effects = { disable: new Set(), hide: new Set(), restrictOptions: { L2:null,L3:null,L4:null,L5:null }, notes: [] };
-  for (const r of active) {
-    r.effect?.disable?.forEach(l => effects.disable.add(l));
-    r.effect?.hide?.forEach(l => effects.hide.add(l));
-    if (r.effect?.restrictOptions) for (const [lvl, list] of Object.entries(r.effect.restrictOptions)) effects.restrictOptions[lvl] = list;
-    if (r.effect?.note) effects.notes.push(r.effect.note);
+/*
+  Each item CAN have a "parent" object, e.g. {L1:"101"}.
+  matchParents returns true if the item's parent constraints all match sel.
+*/
+function matchParents(item, sel){
+  if(!item.parent) return true;
+  var keys=Object.keys(item.parent);
+  for(var i=0;i<keys.length;i++){
+    var k=keys[i], v=item.parent[k];
+    if(v && sel[k]!==v) return false;
   }
-  return { active, effects };
+  return true;
 }
 
-// ─── UI Helpers ──────────────────────────────────────────────────────────────
-const Section = ({ title, children, right }) => (
-  <div className="rounded-2xl shadow p-4 md:p-6 bg-white/5 border border-white/10">
-    <div className="flex items-center justify-between gap-3 mb-3">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      {right}
-    </div>
-    {children}
-  </div>
-);
-const Pill = ({children, color="default"}) => {
-  const colors = { default: "border-white/20 text-white/80", green: "border-green-500/40 text-green-300 bg-green-900/20", red: "border-red-500/40 text-red-300 bg-red-900/20", blue: "border-blue-500/40 text-blue-300 bg-blue-900/20" };
-  return <span className={`inline-flex items-center px-2 py-0.5 text-xs rounded-full border ${colors[color]}`}>{children}</span>;
-};
-const Btn = ({ children, onClick, variant="default", size="sm", disabled=false, className="" }) => {
-  const base = "inline-flex items-center justify-center rounded-xl font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed";
-  const sizes = { sm: "px-3 py-1.5 text-sm", md: "px-4 py-2 text-sm", xs: "px-2 py-1 text-xs" };
-  const variants = {
-    default: "border border-white/20 hover:bg-white/10",
-    primary: "bg-indigo-600 hover:bg-indigo-500 text-white",
-    danger: "bg-red-600/80 hover:bg-red-500 text-white border border-red-500/30",
-    ghost: "hover:bg-white/10",
-    success: "bg-green-700 hover:bg-green-600 text-white",
-  };
-  return <button onClick={onClick} disabled={disabled} className={`${base} ${sizes[size]} ${variants[variant]} ${className}`}>{children}</button>;
-};
+function applyRules(rules, sel){
+  var active=(rules||[]).filter(function(r){
+    if(!r.enabled) return false;
+    var when=r.when||{}, keys=Object.keys(when);
+    for(var i=0;i<keys.length;i++){
+      var list=when[keys[i]];
+      if(list&&list.length&&list.indexOf(sel[keys[i]]||"")<0) return false;
+    }
+    return true;
+  }).sort(function(a,b){ return (b.priority||0)-(a.priority||0); });
+  var dis={}, notes=[];
+  active.forEach(function(r){
+    if(r.effect&&r.effect.disable) r.effect.disable.forEach(function(l){ dis[l]=true; });
+    if(r.effect&&r.effect.note) notes.push(r.effect.note);
+  });
+  return {active:active,disabled:dis,notes:notes};
+}
 
-function SearchSelect({ label, disabled, value, onChange, options }) {
-  const [query, setQuery] = useState("");
-  const filtered = useMemo(() => {
-    const q = normalizeText(query);
-    if (!q) return options;
-    return options.filter(o => normalizeText(o.code+" "+o.name).includes(q));
-  }, [query, options]);
+function emptyStore(){
+  return {
+    version:1,
+    publishedAt:new Date().toISOString(),
+    levels:{L1:[],L2:[],L3:[],L4:[],L5:[]},
+    /* links: { "L2": { "parentCode": ["childCode","childCode",...] } } */
+    links:{L2:{},L3:{},L4:{},L5:{}},
+    rules:[]
+  };
+}
+
+/* ════════════════════════════════════════
+   UI PRIMITIVES
+═════════════════════════════════════════ */
+function Section(props){
+  return (
+    <div className="rounded-2xl p-4 md:p-5 bg-white/5 border border-white/10">
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <h2 className="text-base font-semibold">{props.title}</h2>
+        {props.right}
+      </div>
+      {props.children}
+    </div>
+  );
+}
+
+function Btn(props){
+  var base="inline-flex items-center justify-center rounded-xl font-medium transition-all text-sm px-3 py-1.5 disabled:opacity-40 disabled:cursor-not-allowed gap-1 ";
+  var styles={
+    default:"border border-white/20 hover:bg-white/10",
+    primary:"bg-indigo-600 hover:bg-indigo-500 text-white",
+    danger:"bg-red-700 hover:bg-red-600 text-white",
+    success:"bg-green-700 hover:bg-green-600 text-white",
+    ghost:"hover:bg-white/10"
+  };
+  var v=props.variant||"default";
+  return <button onClick={props.onClick} disabled={props.disabled} className={base+(styles[v]||styles.default)+" "+(props.cls||"")}>{props.children}</button>;
+}
+
+function Tag(props){
+  var colors={
+    default:"border-white/20 text-white/70",
+    green:"border-green-600/40 text-green-300 bg-green-900/20",
+    red:"border-red-600/40 text-red-300 bg-red-900/20",
+    blue:"border-blue-600/40 text-blue-300 bg-blue-900/20",
+    yellow:"border-yellow-600/40 text-yellow-300 bg-yellow-900/20",
+    purple:"border-purple-600/40 text-purple-300 bg-purple-900/20"
+  };
+  var c=colors[props.color||"default"]||colors.default;
+  return <span className={"inline-flex items-center px-2 py-0.5 text-xs rounded-full border "+c}>{props.children}</span>;
+}
+
+function Checkbox(props){
+  return (
+    <label className="flex items-center gap-2 cursor-pointer select-none">
+      <div onClick={props.onChange}
+           className={"w-4 h-4 rounded border flex items-center justify-center transition-colors "+(props.checked?"bg-indigo-600 border-indigo-500":"border-white/30 hover:border-white/60")}>
+        {props.checked && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+      </div>
+      {props.label && <span className="text-sm text-white/80">{props.label}</span>}
+    </label>
+  );
+}
+
+/* ════════════════════════════════════════
+   SEARCH SELECT (Builder)
+═════════════════════════════════════════ */
+function SearchSelect(props){
+  var disabled=props.disabled, value=props.value, onChange=props.onChange, options=props.options||[];
+  var qs=useState(""); var query=qs[0],setQuery=qs[1];
+  var filtered=useMemo(function(){
+    var q=norm(query);
+    if(!q) return options;
+    return options.filter(function(o){ return norm(o.code+" "+o.name).indexOf(q)>=0; });
+  },[query,options]);
   return (
     <div className="space-y-1">
-      <label className="text-sm text-white/70">{label}</label>
       <input disabled={disabled}
-        className={`w-full rounded-xl border px-3 py-2 text-sm bg-black/30 border-white/15 outline-none focus:ring focus:ring-indigo-500/30 ${disabled?"opacity-60 cursor-not-allowed":""}`}
-        placeholder={disabled?"Disabled by rules":"Type to filter..."}
-        value={query} onChange={e=>setQuery(e.target.value)} />
-      <div className={`max-h-44 overflow-auto rounded-xl border bg-black/30 border-white/15 ${disabled?"opacity-60 pointer-events-none":""}`}>
-        {filtered.length===0 && <div className="p-2 text-sm text-white/60">No options</div>}
-        {filtered.map(o => (
-          <button key={o.code+o.name}
-            className={`w-full text-left px-3 py-2 text-sm hover:bg-white/10 ${value===o.code?"bg-indigo-500/20":""}`}
-            onClick={()=>onChange(o.code)}>
-            <div className="font-medium">{o.code}</div>
-            <div className="text-xs text-white/70">{o.name}</div>
-          </button>
-        ))}
+        className={"w-full rounded-xl border px-3 py-2 text-sm bg-black/30 border-white/15 outline-none focus:ring focus:ring-indigo-500/40 "+(disabled?"opacity-40 cursor-not-allowed":"")}
+        placeholder={disabled?"Disabled":"Search…"}
+        value={query} onChange={function(e){setQuery(e.target.value);}} />
+      <div className={"max-h-48 overflow-auto scrollbar-thin rounded-xl border bg-zinc-900 border-white/10 "+(disabled?"opacity-40 pointer-events-none":"")}>
+        {filtered.length===0 && <div className="p-3 text-sm text-white/40 text-center">No options</div>}
+        {filtered.map(function(o){
+          return (
+            <button key={o.code+"|"+o.name}
+              className={"w-full text-left px-3 py-2 text-sm hover:bg-white/10 border-b border-white/5 last:border-0 "+(value===o.code?"bg-indigo-500/20 text-indigo-200":"")}
+              onClick={function(){onChange(o.code);}}>
+              <span className="font-mono font-semibold text-xs mr-2">{o.code}</span>
+              <span className="text-xs text-white/60">{o.name}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-// ─── Password Gate ────────────────────────────────────────────────────────────
-function PasswordGate({ onSuccess }) {
-  const [input, setInput] = useState("");
-  const [error, setError] = useState("");
-  const check = () => {
-    if (input === "05012023") onSuccess();
-    else setError("Incorrect admin password.");
-  };
+/* ════════════════════════════════════════
+   PASSWORD GATE
+═════════════════════════════════════════ */
+function PasswordGate(props){
+  var s=useState(""); var input=s[0],setInput=s[1];
+  var e=useState(""); var err=e[0],setErr=e[1];
+  function check(){ if(input==="05012023") props.onSuccess(); else setErr("Wrong password"); }
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-      <div className="bg-zinc-900 p-6 rounded-2xl shadow-lg max-w-sm w-full border border-white/10 space-y-3">
-        <h2 className="text-lg font-semibold">Admin Login</h2>
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+      <div className="bg-zinc-900 p-6 rounded-2xl border border-white/10 w-full max-w-sm space-y-3">
+        <h2 className="font-semibold text-lg">Admin Login</h2>
         <input type="password" className="w-full rounded-xl border px-3 py-2 text-sm bg-black/30 border-white/15 outline-none"
-               placeholder="Enter Admin Password" value={input}
-               onChange={e=>setInput(e.target.value)}
-               onKeyDown={e=>e.key==="Enter"&&check()} />
-        {error && <div className="text-red-400 text-sm">{error}</div>}
-        <Btn variant="primary" size="md" onClick={check} className="w-full">Login</Btn>
+               placeholder="Password" value={input}
+               onChange={function(e){setInput(e.target.value);}}
+               onKeyDown={function(e){if(e.key==="Enter")check();}} />
+        {err && <div className="text-red-400 text-sm">{err}</div>}
+        <Btn variant="primary" onClick={check} cls="w-full justify-center">Login</Btn>
       </div>
     </div>
   );
 }
 
-// ─── GitHub Settings Panel ───────────────────────────────────────────────────
-function GitHubSettings({ cfg, onChange }) {
-  const [local, setLocal] = useState(cfg);
-  const set = (k,v) => setLocal(p=>({...p,[k]:v}));
-  const save = () => { onChange(local); alert("GitHub settings saved!"); };
+/* ════════════════════════════════════════
+   GITHUB SETTINGS
+═════════════════════════════════════════ */
+function GhSettings(props){
+  var s=useState(props.cfg); var local=s[0],setLocal=s[1];
+  function set(k,v){ setLocal(function(p){ var n=Object.assign({},p); n[k]=v; return n; }); }
+  var fields=[
+    {k:"owner",label:"GitHub Username",ph:"myusername"},
+    {k:"repo", label:"Repository",     ph:"cost-center-codes"},
+    {k:"branch",label:"Branch",        ph:"main"},
+    {k:"path", label:"File path",      ph:"data.json"},
+  ];
   return (
-    <Section title="GitHub Settings" right={<Pill color="blue">Database Config</Pill>}>
-      <p className="text-sm text-white/60 mb-4">These settings connect the app to your GitHub repo where <code className="bg-white/10 px-1 rounded">data.json</code> is stored. Changes you make in the Admin panel will be saved directly to GitHub.</p>
-      <div className="grid md:grid-cols-2 gap-3">
-        {[
-          { key:"owner", label:"GitHub Username / Org", placeholder:"e.g. myusername" },
-          { key:"repo",  label:"Repository Name",       placeholder:"e.g. cost-center-codes" },
-          { key:"branch",label:"Branch",                placeholder:"main" },
-          { key:"path",  label:"File path in repo",     placeholder:"data.json" },
-        ].map(({key,label,placeholder}) => (
-          <div key={key} className="space-y-1">
-            <label className="text-sm text-white/70">{label}</label>
-            <input className="w-full rounded-xl border px-3 py-2 text-sm bg-black/30 border-white/15 outline-none focus:ring focus:ring-indigo-500/30"
-                   placeholder={placeholder} value={local[key]} onChange={e=>set(key,e.target.value)} />
-          </div>
-        ))}
+    <Section title="GitHub Settings" right={<Tag color="blue">Database</Tag>}>
+      <div className="grid md:grid-cols-2 gap-3 mb-3">
+        {fields.map(function(f){
+          return (
+            <div key={f.k} className="space-y-1">
+              <label className="text-xs text-white/50">{f.label}</label>
+              <input className="w-full rounded-xl border px-3 py-2 text-sm bg-black/30 border-white/15 outline-none"
+                     placeholder={f.ph} value={local[f.k]} onChange={function(e){set(f.k,e.target.value);}} />
+            </div>
+          );
+        })}
         <div className="md:col-span-2 space-y-1">
-          <label className="text-sm text-white/70">Personal Access Token <span className="text-white/40">(needs <code>contents: write</code> permission)</span></label>
-          <input type="password" className="w-full rounded-xl border px-3 py-2 text-sm bg-black/30 border-white/15 outline-none focus:ring focus:ring-indigo-500/30"
-                 placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" value={local.token} onChange={e=>set("token",e.target.value)} />
-          <p className="text-xs text-white/40">Create at: GitHub → Settings → Developer Settings → Personal Access Tokens → Fine-grained → repository "Contents" read+write.</p>
+          <label className="text-xs text-white/50">Personal Access Token <span className="text-white/30">(Contents: read+write)</span></label>
+          <input type="password" className="w-full rounded-xl border px-3 py-2 text-sm bg-black/30 border-white/15 outline-none"
+                 placeholder="ghp_xxxx" value={local.token} onChange={function(e){set("token",e.target.value);}} />
         </div>
       </div>
-      <div className="mt-3">
-        <Btn variant="primary" onClick={save}>Save Settings</Btn>
-      </div>
+      <Btn variant="primary" onClick={function(){ props.onChange(local); alert("Saved!"); }}>Save Settings</Btn>
     </Section>
   );
 }
 
-// ─── Item Editor (Add / Edit modal) ──────────────────────────────────────────
-function ItemModal({ level, item, store, onSave, onClose }) {
-  const isEdit = !!item;
-  const parentLvl = { L2:"L1", L3:null, L4:"L3", L5:"L4" }[level];
-  const [code, setCode] = useState(item?.code||"");
-  const [name, setName] = useState(item?.name||"");
-  const [parent, setParent] = useState(item?.parent || (parentLvl ? {[parentLvl]:""} : undefined));
-  const [err, setErr] = useState("");
+/* ════════════════════════════════════════
+   ITEM MODAL (Add / Edit item)
+═════════════════════════════════════════ */
+function ItemModal(props){
+  var level=props.level, item=props.item, store=props.store;
+  var parentLvl=PARENT_OF[level];
+  var s1=useState(item?item.code:""); var code=s1[0],setCode=s1[1];
+  var s2=useState(item?item.name:""); var name=s2[0],setName=s2[1];
+  var s3=useState(item&&item.parent?item.parent:{}); var parent=s3[0],setParent=s3[1];
+  var s4=useState(""); var err=s4[0],setErr=s4[1];
+  var parentOptions=parentLvl?(store.levels[parentLvl]||[]):[];
 
-  const parentOptions = parentLvl ? (store.levels[parentLvl]||[]) : [];
-
-  const submit = () => {
-    if (!code.trim()) { setErr("Code is required."); return; }
-    if (!name.trim()) { setErr("Name is required."); return; }
-    if (parentLvl && !parent?.[parentLvl]) { setErr(`Please select a ${parentLvl} parent.`); return; }
-    // duplicate code check (only for new items)
-    if (!isEdit) {
-      const exists = (store.levels[level]||[]).find(x => x.code === code.trim() && JSON.stringify(x.parent) === JSON.stringify(parent));
-      if (exists) { setErr(`Code "${code}" already exists in ${level} under same parent.`); return; }
-    }
-    const entry = { code: code.trim(), name: name.trim() };
-    if (parentLvl) entry.parent = parent;
-    onSave(entry);
-  };
-
+  function submit(){
+    if(!code.trim()){setErr("Code is required.");return;}
+    if(!name.trim()){setErr("Name is required.");return;}
+    if(parentLvl&&!parent[parentLvl]){setErr("Select parent "+parentLvl+".");return;}
+    var entry={code:code.trim(),name:name.trim()};
+    if(parentLvl){var p={}; p[parentLvl]=parent[parentLvl]; entry.parent=p;}
+    props.onSave(entry);
+  }
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 rounded-2xl border border-white/10 shadow-2xl w-full max-w-md space-y-4 p-6">
+    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
+      <div className="bg-zinc-900 rounded-2xl border border-white/10 shadow-2xl w-full max-w-md p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-lg">{isEdit ? "Edit" : "Add"} {levelLabels[level]} Item</h3>
-          <Btn variant="ghost" size="xs" onClick={onClose}>✕</Btn>
+          <h3 className="font-semibold">{item?"Edit":"Add"} {LABELS[level]}</h3>
+          <Btn variant="ghost" onClick={props.onClose}>✕</Btn>
         </div>
         {parentLvl && (
           <div className="space-y-1">
-            <label className="text-sm text-white/70">Parent {parentLvl}</label>
-            <select className="w-full rounded-xl border px-3 py-2 text-sm bg-black/30 border-white/15 outline-none"
-                    value={parent?.[parentLvl]||""}
-                    onChange={e=>setParent({[parentLvl]:e.target.value})}>
-              <option value="">— Select {parentLvl} —</option>
-              {parentOptions.map(o=>(
-                <option key={o.code+o.name} value={o.code}>{o.code} — {o.name}</option>
-              ))}
+            <label className="text-xs text-white/50">Parent {parentLvl}</label>
+            <select className="w-full rounded-xl border px-3 py-2 text-sm bg-zinc-800 border-white/15 outline-none"
+                    value={parent[parentLvl]||""}
+                    onChange={function(e){ var p={}; p[parentLvl]=e.target.value; setParent(p); }}>
+              <option value="">— Select —</option>
+              {parentOptions.map(function(o){
+                return <option key={o.code} value={o.code}>{o.code} — {o.name}</option>;
+              })}
             </select>
           </div>
         )}
         <div className="space-y-1">
-          <label className="text-sm text-white/70">Code</label>
-          <input className="w-full rounded-xl border px-3 py-2 text-sm bg-black/30 border-white/15 outline-none focus:ring focus:ring-indigo-500/30"
-                 placeholder="e.g. 2099" value={code} onChange={e=>setCode(e.target.value)} />
+          <label className="text-xs text-white/50">Code</label>
+          <input className="w-full rounded-xl border px-3 py-2 text-sm bg-black/30 border-white/15 outline-none"
+                 value={code} onChange={function(e){setCode(e.target.value);}} placeholder="e.g. 2099"/>
         </div>
         <div className="space-y-1">
-          <label className="text-sm text-white/70">Name</label>
-          <textarea className="w-full rounded-xl border px-3 py-2 text-sm bg-black/30 border-white/15 outline-none focus:ring focus:ring-indigo-500/30 resize-none"
-                 rows={3} placeholder="Description..." value={name} onChange={e=>setName(e.target.value)} />
+          <label className="text-xs text-white/50">Name</label>
+          <textarea className="w-full rounded-xl border px-3 py-2 text-sm bg-black/30 border-white/15 outline-none resize-none"
+                    rows="3" value={name} onChange={function(e){setName(e.target.value);}} placeholder="Description…"/>
         </div>
-        {err && <div className="text-red-400 text-sm">{err}</div>}
-        <div className="flex gap-2 pt-1">
-          <Btn variant="primary" onClick={submit} className="flex-1">{isEdit ? "Save Changes" : "Add Item"}</Btn>
-          <Btn variant="default" onClick={onClose}>Cancel</Btn>
+        {err&&<div className="text-red-400 text-sm">{err}</div>}
+        <div className="flex gap-2">
+          <Btn variant="primary" onClick={submit} cls="flex-1 justify-center">{item?"Save":"Add"}</Btn>
+          <Btn variant="default" onClick={props.onClose}>Cancel</Btn>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Level Editor Panel ───────────────────────────────────────────────────────
-function LevelEditor({ level, store, onStoreChange }) {
-  const [modal, setModal] = useState(null); // null | { item } | "add"
-  const [search, setSearch] = useState("");
-  const [filterParent, setFilterParent] = useState("");
+/* ════════════════════════════════════════
+   LINK MANAGER
+   يتحكم في أي عناصر تظهر في القائمة بناءً على اختيار القائمة الأب
+═════════════════════════════════════════ */
+function LinkManager(props){
+  var store=props.store, onStoreChange=props.onStoreChange;
 
-  const parentLvl = { L2:"L1", L3:null, L4:"L3", L5:"L4" }[level];
-  const items = store.levels[level] || [];
-  const parentOptions = parentLvl ? (store.levels[parentLvl]||[]) : [];
+  /* الـ level الذي يتم إدارة روابطه */
+  var ls=useState("L2"); var childLvl=ls[0],setChildLvl=ls[1];
+  /* الـ parent المحدد */
+  var ps=useState(""); var selParent=ps[0],setSelParent=ps[1];
+  /* بحث في قائمة الأطفال */
+  var ss=useState(""); var search=ss[0],setSearch=ss[1];
 
-  const filtered = useMemo(() => {
-    let arr = items;
-    if (filterParent) arr = arr.filter(i => i.parent?.[parentLvl] === filterParent);
-    if (search) {
-      const q = normalizeText(search);
-      arr = arr.filter(i => normalizeText(i.code+" "+i.name).includes(q));
+  var parentLvl=PARENT_OF[childLvl]; /* L2→L1, L3→L1, L4→L3, L5→L4 */
+  var parentItems=parentLvl?(store.levels[parentLvl]||[]):[];
+  var childItems=store.levels[childLvl]||[];
+
+  /* الروابط الحالية للـ level المختار */
+  var links=store.links||{};
+  var lvlLinks=links[childLvl]||{};
+
+  /* العناصر المرتبطة بالأب المختار */
+  var linkedSet=selParent&&lvlLinks[selParent]?lvlLinks[selParent]:[];
+
+  /* عناصر الأطفال بعد فلترة البحث */
+  var filteredChildren=useMemo(function(){
+    var q=norm(search);
+    if(!q) return childItems;
+    return childItems.filter(function(c){ return norm(c.code+" "+c.name).indexOf(q)>=0; });
+  },[childItems,search]);
+
+  function isLinked(childCode){
+    if(!selParent) return false;
+    if(!lvlLinks[selParent]||lvlLinks[selParent].length===0) return true; /* إذا فارغة = الكل مرتبط */
+    return lvlLinks[selParent].indexOf(childCode)>=0;
+  }
+
+  function toggleLink(childCode){
+    if(!selParent) return;
+    var newLinks=JSON.parse(JSON.stringify(links));
+    if(!newLinks[childLvl]) newLinks[childLvl]={};
+    var current=newLinks[childLvl][selParent]||[];
+
+    /* إذا كانت القائمة فارغة يعني "الكل مرتبط"، نبدأ بتحديد الكل ثم نشيل */
+    if(current.length===0){
+      current=childItems.map(function(c){return c.code;});
     }
-    return arr;
-  }, [items, search, filterParent, parentLvl]);
 
-  const saveItem = (entry) => {
-    const newLevels = { ...store.levels };
-    const arr = [...(newLevels[level]||[])];
-    if (modal?.item) {
-      // edit: find by original code+parent
-      const idx = arr.findIndex(x => x.code===modal.item.code && JSON.stringify(x.parent)===JSON.stringify(modal.item.parent));
-      if (idx >= 0) arr[idx] = entry; else arr.push(entry);
-    } else {
-      arr.push(entry);
-    }
-    newLevels[level] = arr;
-    onStoreChange({ ...store, levels: newLevels });
-    setModal(null);
-  };
+    var idx=current.indexOf(childCode);
+    if(idx>=0) current=current.filter(function(x){return x!==childCode;});
+    else current=current.concat([childCode]);
 
-  const deleteItem = (item) => {
-    if (!confirm(`Delete "${item.code} — ${item.name}"?\n\nNote: child items referencing this will NOT be automatically deleted.`)) return;
-    const newLevels = { ...store.levels };
-    newLevels[level] = (newLevels[level]||[]).filter(x => !(x.code===item.code && JSON.stringify(x.parent)===JSON.stringify(item.parent)));
-    onStoreChange({ ...store, levels: newLevels });
-  };
+    newLinks[childLvl][selParent]=current;
+    var ns=Object.assign({},store,{links:newLinks});
+    onStoreChange(ns);
+  }
+
+  function selectAll(){
+    if(!selParent) return;
+    var newLinks=JSON.parse(JSON.stringify(links));
+    if(!newLinks[childLvl]) newLinks[childLvl]={};
+    newLinks[childLvl][selParent]=[];  /* فارغة = الكل */
+    var ns=Object.assign({},store,{links:newLinks});
+    onStoreChange(ns);
+  }
+
+  function clearAll(){
+    if(!selParent) return;
+    var newLinks=JSON.parse(JSON.stringify(links));
+    if(!newLinks[childLvl]) newLinks[childLvl]={};
+    newLinks[childLvl][selParent]=["__none__"]; /* قائمة وهمية = لا شيء */
+    var ns=Object.assign({},store,{links:newLinks});
+    onStoreChange(ns);
+  }
+
+  var tabs=["L2","L3","L4","L5"];
+  var linkedCount=selParent
+    ? (lvlLinks[selParent]&&lvlLinks[selParent].length>0
+        ? (lvlLinks[selParent][0]==="__none__"?0:lvlLinks[selParent].length)
+        : childItems.length)
+    : 0;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/3 p-4 space-y-3">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="font-semibold text-white/90">{levelLabels[level]} <span className="text-white/40 text-sm">({filtered.length}/{items.length})</span></div>
-        <Btn variant="primary" size="xs" onClick={()=>setModal("add")}>+ Add</Btn>
+    <div className="space-y-4">
+      <p className="text-sm text-white/50">اختر المستوى ثم اختر عنصر من القائمة الأم لتحديد أي عناصر تظهر تحته في Builder.</p>
+
+      {/* Level tabs */}
+      <div className="flex gap-2 flex-wrap">
+        {tabs.map(function(lvl){
+          return (
+            <button key={lvl}
+              onClick={function(){ setChildLvl(lvl); setSelParent(""); setSearch(""); }}
+              className={"px-4 py-1.5 rounded-xl text-sm font-medium transition-all border "+(childLvl===lvl?"bg-indigo-600 border-indigo-500 text-white":"border-white/20 hover:bg-white/10")}>
+              {LABELS[lvl]}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="flex gap-2 flex-wrap">
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Parent list */}
+        <div className="rounded-xl border border-white/10 bg-black/20 overflow-hidden">
+          <div className="px-3 py-2 bg-white/5 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wider">
+            {parentLvl?LABELS[parentLvl]+" (الأب)":"—"}
+          </div>
+          <div className="max-h-80 overflow-auto scrollbar-thin divide-y divide-white/5">
+            {parentItems.length===0 && <div className="p-4 text-sm text-white/40 text-center">لا توجد بيانات</div>}
+            {parentItems.map(function(p){
+              var hasCustom=lvlLinks[p.code]&&lvlLinks[p.code].length>0;
+              var count=hasCustom
+                ? (lvlLinks[p.code][0]==="__none__"?0:lvlLinks[p.code].length)
+                : childItems.length;
+              return (
+                <button key={p.code}
+                  onClick={function(){setSelParent(p.code); setSearch("");}}
+                  className={"w-full text-left px-3 py-2.5 hover:bg-white/5 transition-colors "+(selParent===p.code?"bg-indigo-500/15 border-l-2 border-indigo-400":"border-l-2 border-transparent")}>
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <span className="font-mono text-xs font-semibold">{p.code}</span>
+                      <span className="text-xs text-white/50 ml-2">{p.name}</span>
+                    </div>
+                    <Tag color={hasCustom?"purple":"default"}>
+                      {count} {LABELS[childLvl]}
+                    </Tag>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Child checkboxes */}
+        <div className="rounded-xl border border-white/10 bg-black/20 overflow-hidden">
+          <div className="px-3 py-2 bg-white/5 border-b border-white/10 flex items-center justify-between gap-2">
+            <span className="text-xs font-semibold text-white/60 uppercase tracking-wider">
+              {LABELS[childLvl]} المتاحة
+              {selParent && <span className="text-indigo-300 ml-2">({linkedCount} محدد)</span>}
+            </span>
+            {selParent && (
+              <div className="flex gap-1">
+                <Btn variant="ghost" onClick={selectAll} cls="text-xs py-0.5 px-2">الكل</Btn>
+                <Btn variant="ghost" onClick={clearAll} cls="text-xs py-0.5 px-2 text-red-400">لا شيء</Btn>
+              </div>
+            )}
+          </div>
+          {!selParent && (
+            <div className="p-6 text-center text-sm text-white/40">
+              اختر عنصراً من القائمة اليسار أولاً
+            </div>
+          )}
+          {selParent && (
+            <div className="p-2 border-b border-white/10">
+              <input className="w-full rounded-xl border px-3 py-1.5 text-sm bg-black/30 border-white/15 outline-none"
+                     placeholder="بحث…" value={search} onChange={function(e){setSearch(e.target.value);}} />
+            </div>
+          )}
+          {selParent && (
+            <div className="max-h-72 overflow-auto scrollbar-thin divide-y divide-white/5 p-1">
+              {filteredChildren.length===0 && <div className="p-4 text-sm text-white/40 text-center">لا توجد عناصر</div>}
+              {filteredChildren.map(function(c){
+                var linked=isLinked(c.code);
+                return (
+                  <div key={c.code}
+                    onClick={function(){toggleLink(c.code);}}
+                    className={"flex items-center gap-3 px-2 py-2 rounded-xl cursor-pointer transition-colors hover:bg-white/5 "+(linked?"bg-indigo-500/10":"")}>
+                    <Checkbox checked={linked} onChange={function(){toggleLink(c.code);}}/>
+                    <div className="flex-1 min-w-0">
+                      <span className="font-mono text-xs font-semibold">{c.code}</span>
+                      <span className="text-xs text-white/50 ml-2 truncate">{c.name}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-indigo-500/20 bg-indigo-900/10 p-3 text-sm text-indigo-300/80">
+        <strong>ملاحظة:</strong> عندما لا تحدد أي روابط للأب، تظهر جميع عناصر المستوى التالي. عند التحديد، تظهر فقط العناصر المختارة.
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════
+   LEVEL EDITOR
+═════════════════════════════════════════ */
+function LevelEditor(props){
+  var level=props.level, store=props.store;
+  var parentLvl=PARENT_OF[level];
+  var ms=useState(null); var modal=ms[0],setModal=ms[1];
+  var ss=useState(""); var search=ss[0],setSearch=ss[1];
+  var fps=useState(""); var fp=fps[0],setFp=fps[1];
+
+  var items=store.levels[level]||[];
+  var parentOptions=parentLvl?(store.levels[parentLvl]||[]):[];
+
+  var filtered=useMemo(function(){
+    var arr=items;
+    if(fp&&parentLvl) arr=arr.filter(function(i){ return i.parent&&i.parent[parentLvl]===fp; });
+    if(search){ var q=norm(search); arr=arr.filter(function(i){ return norm(i.code+" "+i.name).indexOf(q)>=0; }); }
+    return arr;
+  },[items,search,fp,parentLvl]);
+
+  function saveItem(entry){
+    var nl=Object.assign({},store.levels);
+    var arr=(nl[level]||[]).slice();
+    if(modal&&modal.item){
+      var orig=modal.item;
+      var idx=arr.findIndex(function(x){ return x.code===orig.code&&JSON.stringify(x.parent)===JSON.stringify(orig.parent); });
+      if(idx>=0) arr[idx]=entry; else arr.push(entry);
+    } else { arr.push(entry); }
+    nl[level]=arr;
+    props.onStoreChange(Object.assign({},store,{levels:nl}));
+    setModal(null);
+  }
+
+  function deleteItem(item){
+    if(!confirm("Delete \""+item.code+" — "+item.name+"\"?")) return;
+    var nl=Object.assign({},store.levels);
+    nl[level]=(nl[level]||[]).filter(function(x){
+      return !(x.code===item.code&&JSON.stringify(x.parent)===JSON.stringify(item.parent));
+    });
+    props.onStoreChange(Object.assign({},store,{levels:nl}));
+  }
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/20 overflow-hidden">
+      <div className="px-4 py-3 bg-white/5 border-b border-white/10 flex items-center justify-between gap-2">
+        <div className="font-semibold text-sm">{LABELS[level]} <span className="text-white/40 font-normal text-xs">({filtered.length}/{items.length})</span></div>
+        <Btn variant="primary" onClick={function(){setModal({item:null});}}>+ Add</Btn>
+      </div>
+      <div className="p-3 border-b border-white/10 flex gap-2 flex-wrap">
         <input className="flex-1 min-w-0 rounded-xl border px-3 py-1.5 text-sm bg-black/30 border-white/15 outline-none"
-               placeholder="Search code or name..." value={search} onChange={e=>setSearch(e.target.value)} />
+               placeholder="Search…" value={search} onChange={function(e){setSearch(e.target.value);}} />
         {parentLvl && (
-          <select className="rounded-xl border px-2 py-1.5 text-sm bg-black/30 border-white/15 outline-none"
-                  value={filterParent} onChange={e=>setFilterParent(e.target.value)}>
+          <select className="rounded-xl border px-2 py-1.5 text-sm bg-zinc-800 border-white/15 outline-none"
+                  value={fp} onChange={function(e){setFp(e.target.value);}}>
             <option value="">All {parentLvl}</option>
-            {parentOptions.map(o=>(
-              <option key={o.code} value={o.code}>{o.code}</option>
-            ))}
+            {parentOptions.map(function(o){ return <option key={o.code} value={o.code}>{o.code} — {o.name.slice(0,25)}</option>; })}
           </select>
         )}
       </div>
-
-      <div className="max-h-80 overflow-auto divide-y divide-white/5 rounded-xl border border-white/10">
-        {filtered.length===0 && <div className="p-3 text-sm text-white/40 text-center">No items found.</div>}
-        {filtered.map((item,i) => (
-          <div key={item.code+i} className="flex items-start gap-2 px-3 py-2 hover:bg-white/5 group">
-            <div className="flex-1 min-w-0">
-              <div className="font-mono text-sm font-medium">{item.code}</div>
-              <div className="text-xs text-white/60 truncate">{item.name}</div>
-              {item.parent && (
-                <div className="text-xs text-indigo-400/70 mt-0.5">
-                  {Object.entries(item.parent).map(([k,v])=>`${k}: ${v}`).join(", ")}
-                </div>
-              )}
+      <div className="max-h-64 overflow-auto scrollbar-thin divide-y divide-white/5">
+        {filtered.length===0 && <div className="p-4 text-sm text-white/40 text-center">No items.</div>}
+        {filtered.map(function(item,i){
+          return (
+            <div key={item.code+i} className="flex items-start gap-2 px-4 py-2.5 hover:bg-white/5 group">
+              <div className="flex-1 min-w-0">
+                <span className="font-mono text-xs font-semibold">{item.code}</span>
+                <span className="text-xs text-white/50 ml-2">{item.name}</span>
+                {item.parent && (
+                  <div className="text-xs text-indigo-400/50 mt-0.5">
+                    {Object.keys(item.parent).map(function(k){return k+":"+item.parent[k];}).join(", ")}
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                <Btn variant="default" onClick={function(){setModal({item:item});}}>✎</Btn>
+                <Btn variant="danger" onClick={function(){deleteItem(item);}}>✕</Btn>
+              </div>
             </div>
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-              <Btn size="xs" variant="default" onClick={()=>setModal({item})}>✎</Btn>
-              <Btn size="xs" variant="danger" onClick={()=>deleteItem(item)}>✕</Btn>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
-
-      {(modal==="add" || modal?.item) && (
-        <ItemModal
-          level={level}
-          item={modal?.item}
-          store={store}
-          onSave={saveItem}
-          onClose={()=>setModal(null)}
-        />
+      {modal && (
+        <ItemModal level={level} item={modal.item} store={store} onSave={saveItem} onClose={function(){setModal(null);}} />
       )}
     </div>
   );
 }
 
-// ─── Validator ────────────────────────────────────────────────────────────────
-function Validator({ onValidate }) {
-  const [input, setInput] = useState("");
-  const [res, setRes] = useState(null);
+/* ════════════════════════════════════════
+   VALIDATOR
+═════════════════════════════════════════ */
+function Validator(props){
+  var s1=useState(""); var input=s1[0],setInput=s1[1];
+  var s2=useState(null); var res=s2[0],setRes=s2[1];
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
         <input className="flex-1 rounded-xl border px-3 py-2 text-sm bg-black/30 border-white/15 outline-none"
-               placeholder="Paste code like 101-2100-30-401-5001 (use XX for empty levels)"
-               value={input} onChange={e=>setInput(e.target.value)} />
-        <Btn variant="default" onClick={()=>setRes(onValidate(input))}>Validate</Btn>
+               placeholder="101-2001-32-420-5001 (use xx for empty)" value={input}
+               onChange={function(e){setInput(e.target.value);}} />
+        <Btn variant="default" onClick={function(){setRes(props.onValidate(input));}}>Validate</Btn>
       </div>
-      {res && (
+      {res&&res.details&&(
         <div className="space-y-2">
-          {res.details && res.details.map((d) => (
-            <div key={d.level} className={`rounded-xl p-3 border ${d.valid ? 'bg-green-900/30 text-green-200 border-green-700/40' : 'bg-red-900/30 text-red-200 border-red-700/40'}`}>
-              <div className="font-semibold">Level {levelsOrder.indexOf(d.level)+1}: {d.code}</div>
-              {d.name && <div className="text-sm opacity-90">{d.name}</div>}
-              {!d.valid && d.message && <div className="text-sm mt-1">{d.message}</div>}
-            </div>
-          ))}
+          {res.details.map(function(d){
+            return (
+              <div key={d.level} className={"rounded-xl p-3 border "+(d.valid?"bg-green-900/30 text-green-200 border-green-700/40":"bg-red-900/30 text-red-200 border-red-700/40")}>
+                <div className="font-semibold text-sm">L{LEVELS.indexOf(d.level)+1}: {d.code}</div>
+                {d.name&&<div className="text-xs opacity-80">{d.name}</div>}
+                {!d.valid&&d.message&&<div className="text-xs mt-1">{d.message}</div>}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
 
-// ─── Main App ─────────────────────────────────────────────────────────────────
-function App() {
-  const [store, setStore] = useState(null);
-  const [sha, setSha] = useState(null);
-  const [ghCfg, setGhCfg] = useState(loadGhConfig);
-  const [tab, setTab] = useState("builder");
-  const [unlocked, setUnlocked] = useState(false);
-  const [status, setStatus] = useState({ type:"", msg:"" });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [dirty, setDirty] = useState(false);
-  const [sel, setSel] = useState({ L1:"", L2:"", L3:"", L4:"", L5:"" });
+/* ════════════════════════════════════════
+   MAIN APP
+═════════════════════════════════════════ */
+function App(){
+  var s1=useState(null);  var store=s1[0],setStore=s1[1];
+  var s2=useState(null);  var sha=s2[0],setSha=s2[1];
+  var s3=useState(loadGhCfg); var ghCfg=s3[0],setGhCfg=s3[1];
+  var s4=useState("builder"); var tab=s4[0],setTab=s4[1];
+  var s5=useState("items"); var adminTab=s5[0],setAdminTab=s5[1];
+  var s6=useState(false); var unlocked=s6[0],setUnlocked=s6[1];
+  var s7=useState({t:"",m:""}); var status=s7[0],setStatus=s7[1];
+  var s8=useState(true);  var loading=s8[0],setLoading=s8[1];
+  var s9=useState(false); var saving=s9[0],setSaving=s9[1];
+  var s10=useState(false); var dirty=s10[0],setDirty=s10[1];
+  var s11=useState({L1:"",L2:"",L3:"",L4:"",L5:""}); var sel=s11[0],setSel=s11[1];
 
-  const isGhConfigured = ghCfg.owner && ghCfg.repo && ghCfg.token;
+  var isGhOk=!!(ghCfg.owner&&ghCfg.repo&&ghCfg.token);
 
-  // Load data on mount
-  useEffect(() => {
-    async function load() {
+  useEffect(function(){
+    async function load(){
       setLoading(true);
-      if (isGhConfigured) {
-        try {
-          const { store: s, sha: sh } = await fetchFromGitHub(ghCfg);
-          setStore(s);
-          setSha(sh);
-          saveLocalStore(s);
-          setStatus({ type:"success", msg:"Loaded from GitHub ✓" });
-        } catch(e) {
-          const cached = loadLocalStore();
-          if (cached) {
-            setStore(cached);
-            setStatus({ type:"warn", msg:`Using cached data (GitHub error: ${e.message})` });
-          } else {
-            setStatus({ type:"error", msg:`GitHub error: ${e.message}. Configure GitHub settings in Admin tab.` });
-            setStore({ version:1, publishedAt: new Date().toISOString(), levels:{L1:[],L2:[],L3:[],L4:[],L5:[]}, rules:[] });
-          }
+      if(isGhOk){
+        try{
+          var r=await ghGet(ghCfg);
+          /* ensure links field exists */
+          if(!r.store.links) r.store.links={L2:{},L3:{},L4:{},L5:{}};
+          setStore(r.store); setSha(r.sha); saveCache(r.store);
+          setStatus({t:"green",m:"Loaded from GitHub ✓"});
+        }catch(e){
+          var c=loadCache();
+          if(c){ setStore(c); setStatus({t:"yellow",m:"Offline cache ("+e.message+")"}); }
+          else{ setStore(emptyStore()); setStatus({t:"red",m:"GitHub error: "+e.message}); }
         }
       } else {
-        const cached = loadLocalStore();
-        if (cached) {
-          setStore(cached);
-          setStatus({ type:"warn", msg:"Offline mode — configure GitHub in Admin tab to save changes." });
-        } else {
-          try {
-            const res = await fetch("./data.json");
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const j = await res.json();
-            setStore(j);
-            saveLocalStore(j);
-            setStatus({ type:"warn", msg:"Loaded bundled data.json — configure GitHub in Admin tab to save changes." });
-          } catch(e) {
-            setStore({ version:1, publishedAt: new Date().toISOString(), levels:{L1:[],L2:[],L3:[],L4:[],L5:[]}, rules:[] });
-            setStatus({ type:"warn", msg:"No data — configure GitHub settings in Admin tab." });
-          }
-        }
+        var c=loadCache();
+        if(c){ if(!c.links) c.links={L2:{},L3:{},L4:{},L5:{}}; setStore(c); setStatus({t:"yellow",m:"Cached data loaded."}); }
+        else{ setStore(emptyStore()); setStatus({t:"yellow",m:"No data. Configure GitHub in Admin."}); }
       }
       setLoading(false);
     }
     load();
-  }, []);
+  },[]);
 
-  const updateStore = useCallback((newStore) => {
-    setStore(newStore);
-    saveLocalStore(newStore);
-    setDirty(true);
-  }, []);
+  function updateStore(ns){
+    if(!ns.links) ns.links={L2:{},L3:{},L4:{},L5:{}};
+    setStore(ns); saveCache(ns); setDirty(true);
+  }
 
-  const publishToGitHub = async () => {
-    if (!isGhConfigured) { alert("Configure GitHub settings first."); return; }
+  async function saveToGh(){
+    if(!isGhOk){alert("Configure GitHub first.");return;}
     setSaving(true);
-    try {
-      const updated = { ...store, publishedAt: new Date().toISOString() };
-      const result = await saveToGitHub(ghCfg, updated, sha);
-      setSha(result.content.sha);
-      setStore(updated);
-      saveLocalStore(updated);
-      setDirty(false);
-      setStatus({ type:"success", msg:`Saved to GitHub ✓ (${new Date().toLocaleTimeString()})` });
-    } catch(e) {
-      setStatus({ type:"error", msg:`Save failed: ${e.message}` });
-      alert("Save to GitHub failed: " + e.message);
+    try{
+      var updated=Object.assign({},store,{publishedAt:new Date().toISOString()});
+      var r=await ghPut(ghCfg,updated,sha);
+      setSha(r.content.sha); setStore(updated); saveCache(updated); setDirty(false);
+      setStatus({t:"green",m:"Saved ✓ "+new Date().toLocaleTimeString()});
+    }catch(e){
+      setStatus({t:"red",m:"Save failed: "+e.message});
+      alert("Save failed: "+e.message);
     }
     setSaving(false);
-  };
+  }
 
-  const refreshFromGitHub = async () => {
-    if (!isGhConfigured) { alert("Configure GitHub settings first."); return; }
+  async function refreshFromGh(){
+    if(!isGhOk){alert("Configure GitHub first.");return;}
     setLoading(true);
-    try {
-      const { store: s, sha: sh } = await fetchFromGitHub(ghCfg);
-      setStore(s);
-      setSha(sh);
-      saveLocalStore(s);
-      setDirty(false);
-      setStatus({ type:"success", msg:"Refreshed from GitHub ✓" });
-    } catch(e) {
-      setStatus({ type:"error", msg:`Refresh failed: ${e.message}` });
+    try{
+      var r=await ghGet(ghCfg);
+      if(!r.store.links) r.store.links={L2:{},L3:{},L4:{},L5:{}};
+      setStore(r.store); setSha(r.sha); saveCache(r.store); setDirty(false);
+      setStatus({t:"green",m:"Refreshed ✓"});
+    }catch(e){
+      setStatus({t:"red",m:"Refresh failed: "+e.message});
     }
     setLoading(false);
-  };
+  }
 
-  // Builder logic
-  const { active: activeRules, effects } = useMemo(()=> store ? applyRules(store.rules||[], sel) : { active:[], effects:{ disable:new Set(), hide:new Set(), restrictOptions:{}, notes:[] } }, [store?.rules, sel]);
+  /* ── Builder: compute visible options using links ── */
+  var ruleResult=useMemo(function(){
+    return store?applyRules(store.rules||[],sel):{active:[],disabled:{},notes:[]};
+  },[store,sel]);
+  var dis=ruleResult.disabled, ruleNotes=ruleResult.notes;
 
-  const options = useMemo(() => {
-    if (!store) return {};
-    const out = {};
-    for (const lvl of levelsOrder) {
-      let arr = store.levels[lvl] || [];
-      arr = arr.filter(it => matchesParents(it, sel));
-      const restrict = effects.restrictOptions?.[lvl];
-      if (restrict?.length) arr = arr.filter(it => restrict.includes(it.code));
-      if (lvl==='L3' && sel.L1==='121') {
-        if (!arr.some(a=>a.code==='40')) arr = [...arr, { code:'40', name:'Utilities', parent:{L1:'121'} }];
+  var options=useMemo(function(){
+    if(!store) return {};
+    var links=store.links||{};
+    var out={};
+    LEVELS.forEach(function(lvl){
+      var parentLvl=PARENT_OF[lvl];
+      var all=store.levels[lvl]||[];
+
+      if(!parentLvl){
+        /* L1: no parent filtering */
+        out[lvl]=all;
+        return;
       }
-      out[lvl] = arr;
-    }
+
+      var parentCode=sel[parentLvl]||"";
+
+      /* First filter by item.parent field (existing logic) */
+      var arr=all.filter(function(it){ return matchParents(it,sel); });
+
+      /* Then filter by links if a parent is selected and links exist */
+      if(parentCode){
+        var lvlLinks=links[lvl]||{};
+        var allowed=lvlLinks[parentCode];
+        if(allowed!==undefined&&allowed!==null){
+          if(allowed.length===0){
+            /* empty = show all */
+          } else if(allowed[0]==="__none__"){
+            arr=[];
+          } else {
+            arr=arr.filter(function(it){ return allowed.indexOf(it.code)>=0; });
+          }
+        }
+      }
+
+      out[lvl]=arr;
+    });
     return out;
-  }, [store, sel, effects]);
+  },[store,sel]);
 
-  const disabled = useMemo(()=>({ L2: effects.disable.has("L2"), L3: effects.disable.has("L3"), L4: effects.disable.has("L4"), L5: effects.disable.has("L5") }), [effects]);
-
-  const updateLevel = (lvl, codeVal) => {
-    setSel(prev => {
-      const idx = levelsOrder.indexOf(lvl);
-      const next = { ...prev, [lvl]: codeVal };
-      for (let i=idx+1; i<levelsOrder.length; i++) next[levelsOrder[i]] = "";
+  function updateLevel(lvl,val){
+    setSel(function(prev){
+      var idx=LEVELS.indexOf(lvl);
+      var next=Object.assign({},prev);
+      next[lvl]=val;
+      for(var i=idx+1;i<LEVELS.length;i++) next[LEVELS[i]]="";
       return next;
     });
-  };
+  }
 
-  const code = levelsOrder.map(l => sel[l]||"xx").join("-");
-  const copyToClipboard = async (text) => { try { await navigator.clipboard.writeText(text); alert("Copied!"); } catch {} };
+  var code=LEVELS.map(function(l){return sel[l]||"xx";}).join("-");
 
-  const validateCode = (codeStr) => {
-    if (!store) return { ok:false, details:[] };
-    const depOf = { L2:"L1", L3:"L1", L4:"L3", L5:"L4" };
-    const parts = (codeStr||"").trim().split(/[-\s]+/);
-    const out = { ok:false, details:[], input:codeStr };
-    if (parts.length !== 5) {
-      out.details = levelsOrder.map((lvl,i) => ({ level:lvl, code:(parts[i]||'').toUpperCase(), name:"", valid:false, message:"Code must have 5 parts (L1-L5)." }));
-      return out;
-    }
-    const norm = p => (/^x{2}$/i.test(p) ? "" : p);
-    const [L1,L2,L3,L4,L5] = parts.map(norm);
-    const s = { L1,L2,L3,L4,L5 };
-    const { effects } = applyRules(store.rules||[], s);
-    const det = [];
-    for (const lvl of levelsOrder) {
-      const provided = s[lvl]||"";
-      const dis = effects.disable.has(lvl);
-      let opts = (store.levels[lvl]||[]).filter(it => matchesParents(it, s));
-      const restrict = effects.restrictOptions?.[lvl];
-      if (restrict?.length) opts = opts.filter(it => restrict.includes(it.code));
-      const found = (store.levels[lvl]||[]).find(x => x.code===provided);
-      const name = found?.name||"";
-      let valid=false, message="";
-      if (dis) { valid = provided===""; if (!valid) message=`${lvl} is disabled by rules.`; }
-      else if (opts.length===0) { valid = provided===""; if (!valid) message=`No ${lvl} expected for parents.`; }
-      else {
-        if (!provided) { valid=false; message=`Required ${lvl} is missing.`; }
-        else { valid = !!opts.find(o=>o.code===provided); if (!valid) { const dep=depOf[lvl]; message = dep?`Not valid for ${dep} ${s[dep]||"—"}`:`Invalid ${lvl}.`; } }
-      }
-      det.push({ level:lvl, code:(provided||"xx").toUpperCase(), name, valid, message });
-    }
-    out.details = det;
-    out.ok = det.every(d=>d.valid);
-    return out;
-  };
+  function validateCode(codeStr){
+    if(!store) return {ok:false,details:[]};
+    var parts=(codeStr||"").trim().split(/[-\s]+/);
+    if(parts.length!==5) return {ok:false,details:LEVELS.map(function(lvl,i){return {level:lvl,code:(parts[i]||"").toUpperCase(),name:"",valid:false,message:"Need 5 parts."}; })};
+    var normP=function(p){return /^x{2}$/i.test(p)?"":p;};
+    var vals=parts.map(normP);
+    var s={L1:vals[0],L2:vals[1],L3:vals[2],L4:vals[3],L5:vals[4]};
+    var det=[];
+    LEVELS.forEach(function(lvl){
+      var provided=s[lvl]||"";
+      var opts=(store.levels[lvl]||[]).filter(function(it){return matchParents(it,s);});
+      var found=(store.levels[lvl]||[]).find(function(x){return x.code===provided;});
+      var valid=provided===""||!!opts.find(function(o){return o.code===provided;});
+      det.push({level:lvl,code:(provided||"xx").toUpperCase(),name:found?found.name:"",valid:valid,message:valid?"":"Invalid code for its parent."});
+    });
+    return {ok:det.every(function(d){return d.valid;}),details:det};
+  }
 
-  if (loading) return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black flex items-center justify-center">
-      <div className="text-white/60 text-lg animate-pulse">Loading data…</div>
-    </div>
-  );
+  var statColors={green:"bg-green-900/30 border-green-700/40 text-green-300",red:"bg-red-900/30 border-red-500/40 text-red-300",yellow:"bg-yellow-900/30 border-yellow-700/40 text-yellow-300"};
 
-  const statusColors = { success:"bg-green-900/30 border-green-700/40 text-green-300", warn:"bg-yellow-900/30 border-yellow-700/40 text-yellow-300", error:"bg-red-900/30 border-red-700/40 text-red-300" };
+  if(loading){
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black flex items-center justify-center">
+        <div className="text-white/50 text-lg animate-pulse">Loading…</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black p-4 md:p-8">
@@ -581,121 +794,165 @@ function App() {
 
         {/* Header */}
         <header className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl md:text-3xl font-bold">Cost Center Code Manager</h1>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight">Cost Center Code Manager</h1>
           <div className="flex items-center gap-2 flex-wrap">
-            {dirty && <Pill color="red">Unsaved changes</Pill>}
-            {isGhConfigured && <Pill color="blue">GitHub: {ghCfg.owner}/{ghCfg.repo}</Pill>}
-            <Btn variant={tab==="builder"?"primary":"default"} onClick={()=>setTab("builder")}>Builder</Btn>
-            <Btn variant={tab==="admin"?"primary":"default"} onClick={()=>setTab("admin")}>Admin</Btn>
+            {dirty&&<Tag color="red">Unsaved</Tag>}
+            {isGhOk&&<Tag color="blue">{ghCfg.owner}/{ghCfg.repo}</Tag>}
+            <Btn variant={tab==="builder"?"primary":"default"} onClick={function(){setTab("builder");}}>🔨 Builder</Btn>
+            <Btn variant={tab==="admin"?"primary":"default"} onClick={function(){setTab("admin");}}>⚙ Admin</Btn>
           </div>
         </header>
 
         {/* Status bar */}
-        {status.msg && (
-          <div className={`rounded-xl border px-4 py-2 text-sm flex items-center justify-between gap-2 ${statusColors[status.type]||statusColors.warn}`}>
-            <span>{status.msg}</span>
-            <button onClick={()=>setStatus({type:"",msg:""})} className="opacity-60 hover:opacity-100 text-xs">✕</button>
+        {status.m&&(
+          <div className={"rounded-xl border px-4 py-2 text-sm flex items-center justify-between gap-2 "+(statColors[status.t]||statColors.yellow)}>
+            <span>{status.m}</span>
+            <button onClick={function(){setStatus({t:"",m:""});}} className="opacity-50 hover:opacity-100">✕</button>
           </div>
         )}
 
-        {/* Builder tab */}
-        {tab==="builder" && (
+        {/* ── BUILDER TAB ── */}
+        {tab==="builder"&&(
           <div className="space-y-4">
-            <div className="grid md:grid-cols-5 gap-4">
-              {levelsOrder.map(lvl => (
-                <Section key={lvl} title={`${levelLabels[lvl]} (${lvl})`} right={disabled[lvl] && <Pill>Disabled</Pill>}>
-                  <SearchSelect label={`Pick ${lvl}`} disabled={!!disabled[lvl]} value={sel[lvl]}
-                                onChange={(v)=>updateLevel(lvl,v)} options={options[lvl]||[]} />
-                </Section>
-              ))}
-            </div>
-            <div className="md:col-span-5 space-y-4">
-              <Section title="Live Code">
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="text-2xl font-mono tracking-widest">{code}</div>
-                  <Btn variant="primary" onClick={()=>copyToClipboard(code)}>Copy code</Btn>
-                  <Btn variant="default" onClick={()=>setSel({L1:"",L2:"",L3:"",L4:"",L5:""})}>Reset</Btn>
-                </div>
-                {activeRules.length>0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {activeRules.map(r=><Pill key={r.id}>Rule: {r.id}</Pill>)}
+            <div className="grid md:grid-cols-5 gap-3">
+              {LEVELS.map(function(lvl){
+                var opts=options[lvl]||[];
+                var parentLvl=PARENT_OF[lvl];
+                var parentSelected=!parentLvl||!!sel[parentLvl];
+                return (
+                  <div key={lvl} className="rounded-2xl p-3 bg-white/5 border border-white/10 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold">{LABELS[lvl]}</span>
+                      <div className="flex items-center gap-1">
+                        {dis[lvl]&&<Tag>Disabled</Tag>}
+                        {sel[lvl]&&(
+                          <button onClick={function(){updateLevel(lvl,"");}} className="text-white/30 hover:text-white/70 text-xs ml-1">✕</button>
+                        )}
+                      </div>
+                    </div>
+                    {!parentSelected&&!dis[lvl]&&(
+                      <div className="text-xs text-white/30 py-4 text-center">Select {LABELS[parentLvl]} first</div>
+                    )}
+                    {(parentSelected||lvl==="L1")&&!dis[lvl]&&(
+                      <SearchSelect
+                        disabled={false}
+                        value={sel[lvl]}
+                        onChange={function(v){updateLevel(lvl,v);}}
+                        options={opts}
+                      />
+                    )}
+                    {dis[lvl]&&<div className="text-xs text-white/30 py-4 text-center">Disabled by rules</div>}
+                    {sel[lvl]&&(
+                      <div className="text-center">
+                        <span className="inline-block bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 text-xs font-mono px-2 py-0.5 rounded-lg">{sel[lvl]}</span>
+                      </div>
+                    )}
                   </div>
-                )}
-                {effects.notes?.length>0 && (
-                  <ul className="mt-2 list-disc list-inside text-sm text-white/70">
-                    {effects.notes.map((n,i)=><li key={i}>{n}</li>)}
-                  </ul>
-                )}
-              </Section>
-              <Section title="Validate Code">
-                <Validator onValidate={validateCode} />
-              </Section>
+                );
+              })}
             </div>
+
+            {/* Live code */}
+            <Section title="Live Code">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-2xl font-mono tracking-widest bg-black/30 px-4 py-2 rounded-xl border border-white/10">{code}</span>
+                <Btn variant="primary" onClick={function(){navigator.clipboard.writeText(code).then(function(){alert("Copied!");}).catch(function(){});}}>Copy</Btn>
+                <Btn variant="default" onClick={function(){setSel({L1:"",L2:"",L3:"",L4:"",L5:""});}}>Reset</Btn>
+              </div>
+              {ruleNotes.length>0&&(
+                <ul className="mt-3 list-disc list-inside text-sm text-white/60 space-y-1">
+                  {ruleNotes.map(function(n,i){return <li key={i}>{n}</li>;})}
+                </ul>
+              )}
+            </Section>
+
+            <Section title="Validate Code">
+              <Validator onValidate={validateCode}/>
+            </Section>
           </div>
         )}
 
-        {/* Admin tab */}
-        {tab==="admin" && (
-          unlocked ? (
-            <div className="space-y-6">
-              {/* Save bar */}
-              <Section title="Sync with GitHub" right={dirty ? <Pill color="red">Unsaved</Pill> : <Pill color="green">Up to date</Pill>}>
-                <div className="flex flex-wrap gap-2 items-center">
-                  <Btn variant="success" onClick={publishToGitHub} disabled={saving||!dirty}>
-                    {saving ? "Saving…" : "💾 Save to GitHub"}
-                  </Btn>
-                  <Btn variant="default" onClick={refreshFromGitHub} disabled={saving}>↻ Refresh from GitHub</Btn>
-                  <Btn variant="default" onClick={()=>{
-                    const a=document.createElement('a');
+        {/* ── ADMIN TAB ── */}
+        {tab==="admin"&&(
+          unlocked?(
+            <div className="space-y-5">
+
+              {/* Sync bar */}
+              <Section title="Sync" right={dirty?<Tag color="red">Unsaved changes</Tag>:<Tag color="green">Up to date</Tag>}>
+                <div className="flex flex-wrap gap-2">
+                  <Btn variant="success" disabled={saving||!dirty} onClick={saveToGh}>{saving?"Saving…":"💾 Save to GitHub"}</Btn>
+                  <Btn variant="default" disabled={saving} onClick={refreshFromGh}>↻ Refresh</Btn>
+                  <Btn variant="default" onClick={function(){
+                    var a=document.createElement("a");
                     a.href=URL.createObjectURL(new Blob([JSON.stringify(store,null,2)],{type:"application/json"}));
-                    a.download=`cccm_data_${new Date().toISOString().slice(0,10)}.json`;
+                    a.download="data_"+new Date().toISOString().slice(0,10)+".json";
                     a.click();
-                  }}>⬇ Export JSON</Btn>
-                  <label className="inline-flex items-center cursor-pointer px-3 py-1.5 text-sm rounded-xl border border-white/20 hover:bg-white/10">
-                    ⬆ Import JSON
-                    <input type="file" className="hidden" accept="application/json" onChange={e=>{
-                      const f=e.target.files?.[0]; if(!f) return;
-                      const r=new FileReader();
-                      r.onload=()=>{
-                        try {
-                          const j=JSON.parse(r.result);
+                  }}>⬇ Export</Btn>
+                  <label className="inline-flex items-center px-3 py-1.5 text-sm rounded-xl border border-white/20 hover:bg-white/10 cursor-pointer">
+                    ⬆ Import
+                    <input type="file" className="hidden" accept="application/json" onChange={function(e){
+                      var f=e.target.files&&e.target.files[0]; if(!f) return;
+                      var r=new FileReader();
+                      r.onload=function(){
+                        try{
+                          var j=JSON.parse(r.result);
                           if(!j.levels||!j.levels.L1) throw new Error("Invalid schema");
-                          updateStore(j);
-                          alert("Imported. Click 'Save to GitHub' to publish.");
-                        } catch(err) { alert("Import failed: "+err.message); }
+                          if(!j.links) j.links={L2:{},L3:{},L4:{},L5:{}};
+                          updateStore(j); alert("Imported!");
+                        }catch(err){ alert("Import failed: "+err.message); }
                       };
                       r.readAsText(f);
-                    }} />
+                    }}/>
                   </label>
                 </div>
-                {!isGhConfigured && (
-                  <p className="text-sm text-yellow-400 mt-2">⚠ GitHub not configured — scroll down to configure it.</p>
-                )}
+                {!isGhOk&&<p className="text-yellow-400 text-sm mt-2">⚠ GitHub not configured.</p>}
               </Section>
 
-              {/* Level editors */}
-              <Section title="Edit Levels">
+              {/* Admin sub-tabs */}
+              <div className="flex gap-2 border-b border-white/10 pb-1">
+                {[{k:"items",l:"📋 Edit Items"},{k:"links",l:"🔗 Manage Links"},{k:"github",l:"⚙ GitHub"}].map(function(t){
+                  return (
+                    <button key={t.k}
+                      onClick={function(){setAdminTab(t.k);}}
+                      className={"px-4 py-2 rounded-t-xl text-sm font-medium transition-all border-b-2 "+(adminTab===t.k?"border-indigo-500 text-white bg-white/5":"border-transparent text-white/50 hover:text-white/80")}>
+                      {t.l}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Items editor */}
+              {adminTab==="items"&&(
                 <div className="space-y-4">
-                  {levelsOrder.map(lvl => (
-                    <LevelEditor key={lvl} level={lvl} store={store} onStoreChange={updateStore} />
-                  ))}
+                  {LEVELS.map(function(lvl){
+                    return <LevelEditor key={lvl} level={lvl} store={store} onStoreChange={updateStore}/>;
+                  })}
                 </div>
-              </Section>
+              )}
+
+              {/* Links manager */}
+              {adminTab==="links"&&(
+                <Section title="🔗 إدارة الروابط بين المستويات">
+                  <LinkManager store={store} onStoreChange={updateStore}/>
+                </Section>
+              )}
 
               {/* GitHub settings */}
-              <GitHubSettings cfg={ghCfg} onChange={cfg=>{ setGhCfg(cfg); saveGhConfig(cfg); }} />
+              {adminTab==="github"&&(
+                <GhSettings cfg={ghCfg} onChange={function(c){setGhCfg(c);saveGhCfg(c);}}/>
+              )}
             </div>
-          ) : (
-            <PasswordGate onSuccess={()=>setUnlocked(true)} />
+          ):(
+            <PasswordGate onSuccess={function(){setUnlocked(true);}}/>
           )
         )}
+
       </div>
     </div>
   );
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
 </body>
 </html>
